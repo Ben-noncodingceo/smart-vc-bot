@@ -1,4 +1,5 @@
 import { ProviderId, ProviderConfig } from '../types';
+import { USE_PROXY, PROXY_URL } from './config';
 
 // Provider configurations
 const PROVIDERS: Record<ProviderId, ProviderConfig> = {
@@ -103,33 +104,66 @@ export async function callLLM(params: {
   });
 
   try {
-    const response = await fetch(provider.baseUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        [provider.apiKeyHeaderName]: buildAuthHeaderValue(params.providerId, params.apiKey),
-      },
-      body: JSON.stringify(body),
-    });
+    let response;
+
+    if (USE_PROXY) {
+      // 使用代理服务器
+      response = await fetch(PROXY_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          url: provider.baseUrl,
+          headers: {
+            'Content-Type': 'application/json',
+            [provider.apiKeyHeaderName]: buildAuthHeaderValue(params.providerId, params.apiKey),
+          },
+          body: body
+        }),
+      });
+    } else {
+      // 直接调用 API
+      response = await fetch(provider.baseUrl, {
+        method: 'POST',
+        mode: 'cors',
+        headers: {
+          'Content-Type': 'application/json',
+          [provider.apiKeyHeaderName]: buildAuthHeaderValue(params.providerId, params.apiKey),
+        },
+        body: JSON.stringify(body),
+      });
+    }
 
     if (!response.ok) {
       const errorText = await response.text();
-      throw new Error(`LLM request failed: ${response.status} ${errorText}`);
+      throw new Error(`API 返回错误 (${response.status}): ${errorText || response.statusText}`);
     }
 
     const data = await response.json();
     const content = provider.extractContent(data);
 
     if (!content) {
-      throw new Error('Failed to extract content from LLM response');
+      throw new Error('无法从 API 响应中提取内容。请检查 API Key 是否正确。');
     }
 
     return content;
   } catch (error) {
     if (error instanceof Error) {
-      throw new Error(`LLM call failed: ${error.message}`);
+      // More detailed error messages
+      if (error.message.includes('Failed to fetch')) {
+        throw new Error(
+          `网络请求失败。可能的原因：\n` +
+          `1. CORS 跨域限制 - 请使用支持 CORS 的 API endpoint 或配置代理服务器\n` +
+          `2. 网络连接问题 - 请检查您的网络连接\n` +
+          `3. API endpoint 不正确 - 请检查供应商的 API 地址\n` +
+          `4. API Key 格式错误 - 请确认 API Key 格式正确\n\n` +
+          `建议：使用后端代理服务来避免 CORS 问题。`
+        );
+      }
+      throw new Error(`调用 LLM 失败: ${error.message}`);
     }
-    throw new Error('LLM call failed with unknown error');
+    throw new Error('调用 LLM 时发生未知错误');
   }
 }
 
