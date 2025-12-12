@@ -5,7 +5,7 @@ import UploadAndOptionsPage from './routes/UploadAndOptionsPage';
 import StagedResultPage from './routes/StagedResultPage';
 import './App.css';
 
-const { Content } = Layout;
+const { Content, Footer } = Layout;
 
 function App() {
   return (
@@ -19,6 +19,9 @@ function App() {
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </Content>
+        <Footer style={{ textAlign: 'center', background: '#f0f2f5', padding: '16px 50px' }}>
+          联系作者： <a href="mailto:sunpeng@eduzhixin.com">sunpeng@eduzhixin.com</a>
+        </Footer>
       </Layout>
     </BrowserRouter>
   );
