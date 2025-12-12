@@ -440,7 +440,7 @@ export function FinancingCasesSection({ data }: { data: FinancingCasesAnalysis }
       title: '主导机构',
       dataIndex: 'leadInvestors',
       key: 'leadInvestors',
-      render: (investors: string[]) => investors && investors.length > 0 ? investors.join(', ') : 'N/A'
+      render: (investors: string[]) => Array.isArray(investors) && investors.length > 0 ? investors.join(', ') : 'N/A'
     }
   ];
 
@@ -503,7 +503,7 @@ export function PapersSection({ data }: { data: PapersAnalysis }) {
               description={
                 <>
                   <Text type="secondary">
-                    {paper.authors.join(', ')} • {paper.year}
+                    {Array.isArray(paper.authors) ? paper.authors.join(', ') : paper.authors} • {paper.year}
                     {paper.venue && ` • ${paper.venue}`}
                   </Text>
                 </>

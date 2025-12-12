@@ -176,14 +176,59 @@ export interface AnalysisResult {
   papers?: PapersAnalysis | null;
 }
 
+// Staged Analysis
+export type AnalysisStage = 1 | 2 | 3 | 4;
+
+export interface StagedAnalysisConfig {
+  stage: AnalysisStage;
+  label: string;
+  description: string;
+  items: AnalysisItemId[];
+}
+
+export const ANALYSIS_STAGES: StagedAnalysisConfig[] = [
+  {
+    stage: 1,
+    label: '技术、行业前沿',
+    description: '分析企业技术创新能力和行业前沿定位',
+    items: ['papers', 'frontier', 'publicPeers']
+  },
+  {
+    stage: 2,
+    label: '商业数据商业价值',
+    description: '分析企业商业模式和市场价值',
+    items: ['marketCap', 'revenue', 'profit', 'financingCases', 'policyRisk']
+  },
+  {
+    stage: 3,
+    label: '团队、执行',
+    description: '分析团队执行能力和发展阶段',
+    items: ['stage']
+  },
+  {
+    stage: 4,
+    label: '综合评价投资价值',
+    description: '综合评估投资价值和风险',
+    items: ['investmentValue']
+  }
+];
+
 // Analysis Status
 export type AnalysisStatus =
   | 'idle'
   | 'parsing'
   | 'extractingProfile'
-  | 'analyzing'
+  | 'stage1' | 'stage2' | 'stage3' | 'stage4'
   | 'done'
   | 'error';
+
+export interface StagedAnalysisState {
+  currentStage: AnalysisStage | null;
+  completedStages: AnalysisStage[];
+  stageResults: {
+    [key in AnalysisStage]?: Partial<AnalysisResult>;
+  };
+}
 
 // Chat Message
 export interface ChatMessage {

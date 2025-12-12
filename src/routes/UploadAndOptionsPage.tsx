@@ -3,15 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import {
   Card,
   Upload,
-  Checkbox,
   Button,
   Alert,
   Space,
   Typography,
   Steps,
-  message,
-  Row,
-  Col
+  message
 } from 'antd';
 import {
   InboxOutlined,
@@ -23,8 +20,7 @@ import {
 import type { UploadProps } from 'antd';
 import { useAppStore } from '../lib/store';
 import { validateFile, parseFile, getFileSummary } from '../lib/fileParser';
-import { getAnalysisOptions } from '../lib/prompts';
-import { useAnalysis } from '../hooks/useAnalysis';
+import { useStagedAnalysis } from '../hooks/useStagedAnalysis';
 
 const { Title, Paragraph } = Typography;
 const { Dragger } = Upload;
@@ -35,24 +31,19 @@ export default function UploadAndOptionsPage() {
     providerId,
     apiKey,
     uploadedFile,
-    selectedItems,
     documentText,
     analysisStatus,
     setUploadedFile,
     setDocumentText,
-    setParsedFileName,
-    setSelectedItems
+    setParsedFileName
   } = useAppStore();
 
-  const { isAnalyzing, startAnalysis } = useAnalysis();
+  const { isAnalyzing, startStagedAnalysis } = useStagedAnalysis();
 
   const [localFile, setLocalFile] = useState<File | null>(uploadedFile);
-  const [localSelectedItems, setLocalSelectedItems] = useState(selectedItems);
   const [isParsing, setIsParsing] = useState(false);
   const [parseError, setParseError] = useState<string | null>(null);
   const [fileSummary, setFileSummary] = useState<string>('');
-
-  const analysisOptions = getAnalysisOptions();
 
   useEffect(() => {
     // Redirect if provider or API key is not set
@@ -121,23 +112,13 @@ export default function UploadAndOptionsPage() {
     }
   };
 
-  const handleCheckboxChange = (checkedValues: any) => {
-    setLocalSelectedItems(checkedValues);
-    setSelectedItems(checkedValues);
-  };
-
   const handleStartAnalysis = async () => {
     if (!localFile) {
       message.error('请先上传文件');
       return;
     }
 
-    if (localSelectedItems.length === 0) {
-      message.error('请至少选择一个分析维度');
-      return;
-    }
-
-    await startAnalysis();
+    await startStagedAnalysis();
 
     // Navigate to result page after analysis starts
     if (analysisStatus !== 'error') {
@@ -211,33 +192,20 @@ export default function UploadAndOptionsPage() {
           )}
         </Card>
 
-        {/* Analysis Options */}
-        <Card className="section-card" title="选择分析维度">
-          <Paragraph type="secondary" style={{ marginBottom: 16 }}>
-            请选择您需要的分析维度（默认全选）：
+        {/* Analysis Info */}
+        <Card className="section-card" title="分析说明">
+          <Paragraph type="secondary">
+            分析将分为 4 个阶段进行，每个阶段独立调用 API：
           </Paragraph>
-
-          <Checkbox.Group
-            style={{ width: '100%' }}
-            value={localSelectedItems}
-            onChange={handleCheckboxChange}
-            disabled={isAnalyzing}
-          >
-            <Row gutter={[16, 16]}>
-              {analysisOptions.map((option) => (
-                <Col span={24} md={12} key={option.id}>
-                  <Checkbox value={option.id} style={{ width: '100%' }}>
-                    <div>
-                      <div style={{ fontWeight: 500 }}>{option.label}</div>
-                      <div style={{ fontSize: 12, color: '#999' }}>
-                        {option.description}
-                      </div>
-                    </div>
-                  </Checkbox>
-                </Col>
-              ))}
-            </Row>
-          </Checkbox.Group>
+          <ol style={{ paddingLeft: 20 }}>
+            <li><strong>技术、行业前沿</strong> - 核心论文、前沿技术、公开对标企业</li>
+            <li><strong>商业数据商业价值</strong> - 市值范围、营收规模、利润情况、融资案例、政策风险</li>
+            <li><strong>团队、执行</strong> - 发展阶段判断</li>
+            <li><strong>综合评价投资价值</strong> - 投资价值综合评级</li>
+          </ol>
+          <Paragraph type="secondary" style={{ marginTop: 16 }}>
+            每个阶段完成后，可以查看结果并继续下一阶段。全部完成后可导出完整报告。
+          </Paragraph>
         </Card>
 
         {/* Action Buttons */}
@@ -259,7 +227,7 @@ export default function UploadAndOptionsPage() {
               loading={isAnalyzing}
               disabled={!localFile || !documentText || isParsing}
             >
-              {isAnalyzing ? '分析中...' : '开始分析'}
+              {isAnalyzing ? '准备中...' : '开始分阶段分析'}
             </Button>
           </Space>
         </Card>
