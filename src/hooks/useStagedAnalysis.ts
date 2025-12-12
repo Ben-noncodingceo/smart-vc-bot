@@ -15,6 +15,7 @@ export function useStagedAnalysis() {
     completedStages,
     stageResults,
     setCompanyProfile,
+    setAnalysisResult,
     setAnalysisError,
     setCurrentStage,
     addCompletedStage,
@@ -103,6 +104,13 @@ export function useStagedAnalysis() {
       stageResult.companyProfile = companyProfile;
 
       addCompletedStage(stage, stageResult);
+
+      // Update the global analysisResult with combined results for chat functionality
+      const combined = getCombinedResults();
+      if (combined) {
+        setAnalysisResult(combined);
+      }
+
       setAnalysisError(null);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : '未知错误';

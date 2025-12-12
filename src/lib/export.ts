@@ -1,4 +1,7 @@
 import { AnalysisResult } from '../types';
+import jsPDF from 'jspdf';
+import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType } from 'docx';
+import { saveAs } from 'file-saver';
 
 /**
  * Export analysis result as JSON
@@ -252,4 +255,199 @@ export async function copyToClipboard(content: string): Promise<void> {
     document.execCommand('copy');
     document.body.removeChild(textarea);
   }
+}
+
+/**
+ * Export analysis result as PDF
+ * Note: Using markdown as intermediate format for simplicity
+ */
+export async function exportAsPDF(result: AnalysisResult, filename: string): Promise<void> {
+  // Convert to markdown first
+  const markdown = exportAsMarkdown(result);
+
+  // Create PDF using jsPDF
+  const doc = new jsPDF();
+
+  // Split text into lines that fit the page width
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const margin = 20;
+  const maxLineWidth = pageWidth - (margin * 2);
+
+  const lines = doc.splitTextToSize(markdown, maxLineWidth);
+
+  let y = margin;
+  const lineHeight = 7;
+  const pageHeight = doc.internal.pageSize.getHeight();
+
+  lines.forEach((line: string) => {
+    if (y + lineHeight > pageHeight - margin) {
+      doc.addPage();
+      y = margin;
+    }
+    doc.text(line, margin, y);
+    y += lineHeight;
+  });
+
+  doc.save(filename);
+}
+
+/**
+ * Export analysis result as DOCX
+ */
+export async function exportAsDOCX(result: AnalysisResult, filename: string): Promise<void> {
+  const { companyProfile } = result;
+
+  const children: Paragraph[] = [];
+
+  // Title
+  children.push(
+    new Paragraph({
+      text: `${companyProfile.name} - 企业分析报告`,
+      heading: HeadingLevel.TITLE,
+      alignment: AlignmentType.CENTER,
+    })
+  );
+
+  children.push(new Paragraph({ text: '' }));
+
+  // Company Profile Section
+  children.push(
+    new Paragraph({
+      text: '企业概要',
+      heading: HeadingLevel.HEADING_1,
+    })
+  );
+
+  children.push(
+    new Paragraph({
+      children: [
+        new TextRun({ text: '公司名称: ', bold: true }),
+        new TextRun(companyProfile.name),
+      ],
+    })
+  );
+
+  children.push(
+    new Paragraph({
+      children: [
+        new TextRun({ text: '所属行业: ', bold: true }),
+        new TextRun(companyProfile.industry),
+      ],
+    })
+  );
+
+  children.push(
+    new Paragraph({
+      children: [
+        new TextRun({ text: '所在国家/地区: ', bold: true }),
+        new TextRun(companyProfile.countryOrRegion),
+      ],
+    })
+  );
+
+  children.push(
+    new Paragraph({
+      children: [
+        new TextRun({ text: '企业阶段: ', bold: true }),
+        new TextRun(companyProfile.inferredStage || 'unknown'),
+      ],
+    })
+  );
+
+  children.push(
+    new Paragraph({
+      children: [
+        new TextRun({ text: '简介: ', bold: true }),
+        new TextRun(companyProfile.shortDescription),
+      ],
+    })
+  );
+
+  children.push(
+    new Paragraph({
+      children: [
+        new TextRun({ text: '是否高科技: ', bold: true }),
+        new TextRun(companyProfile.isHighTech ? '是' : '否'),
+      ],
+    })
+  );
+
+  children.push(new Paragraph({ text: '' }));
+
+  // Add other sections based on available data
+  if (result.investmentValue) {
+    children.push(
+      new Paragraph({
+        text: '投资价值评级',
+        heading: HeadingLevel.HEADING_1,
+      })
+    );
+
+    children.push(
+      new Paragraph({
+        children: [
+          new TextRun({ text: '评级: ', bold: true }),
+          new TextRun(result.investmentValue.rating.toUpperCase()),
+        ],
+      })
+    );
+
+    if (result.investmentValue.keyUpsides && result.investmentValue.keyUpsides.length > 0) {
+      children.push(
+        new Paragraph({
+          text: '关键投资亮点:',
+          heading: HeadingLevel.HEADING_2,
+        })
+      );
+
+      result.investmentValue.keyUpsides.forEach((upside, index) => {
+        children.push(
+          new Paragraph({
+            text: `${index + 1}. ${upside}`,
+            bullet: { level: 0 },
+          })
+        );
+      });
+    }
+
+    if (result.investmentValue.keyRisks && result.investmentValue.keyRisks.length > 0) {
+      children.push(
+        new Paragraph({
+          text: '关键风险点:',
+          heading: HeadingLevel.HEADING_2,
+        })
+      );
+
+      result.investmentValue.keyRisks.forEach((risk, index) => {
+        children.push(
+          new Paragraph({
+            text: `${index + 1}. ${risk}`,
+            bullet: { level: 0 },
+          })
+        );
+      });
+    }
+
+    children.push(new Paragraph({ text: '' }));
+  }
+
+  // Footer
+  children.push(
+    new Paragraph({
+      text: `报告生成时间: ${new Date().toLocaleString('zh-CN')}`,
+      alignment: AlignmentType.CENTER,
+    })
+  );
+
+  // Create document
+  const doc = new Document({
+    sections: [{
+      properties: {},
+      children: children,
+    }],
+  });
+
+  // Generate and save
+  const blob = await Packer.toBlob(doc);
+  saveAs(blob, filename);
 }
