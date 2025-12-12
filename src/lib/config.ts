@@ -4,12 +4,22 @@
  * 修改这些设置来配置代理和其他选项
  */
 
-// CORS 代理配置
-export const USE_PROXY = true; // 设为 true 启用代理
-export const PROXY_URL = 'http://localhost:3001/api/proxy';
+// 检测是否在生产环境
+const isProduction = window.location.hostname !== 'localhost' &&
+                     window.location.hostname !== '127.0.0.1';
 
-// 开发模式（如果需要可以手动设置）
-export const DEV_MODE = true;
+// CORS 代理配置
+export const USE_PROXY = true; // 始终启用代理
+
+// 生产环境代理 URL - 部署 Cloudflare Worker 后替换这个 URL
+// 部署命令: wrangler deploy
+const PRODUCTION_PROXY_URL = 'https://ai-bp-cors-proxy.YOUR-SUBDOMAIN.workers.dev';
+
+// 开发环境代理 URL
+const DEVELOPMENT_PROXY_URL = 'http://localhost:3001/api/proxy';
+
+// 根据环境自动选择代理 URL
+export const PROXY_URL = isProduction ? PRODUCTION_PROXY_URL : DEVELOPMENT_PROXY_URL;
 
 /**
  * 使用说明：
