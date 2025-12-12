@@ -21,6 +21,8 @@ import {
   RightOutlined,
   SendOutlined
 } from '@ant-design/icons';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { useAppStore } from '../lib/store';
 import { useStagedAnalysis } from '../hooks/useStagedAnalysis';
 import { useAnalysis } from '../hooks/useAnalysis';
@@ -382,9 +384,11 @@ export default function StagedResultPage() {
                       <Text strong style={{ color: msg.role === 'user' ? '#1890ff' : '#52c41a' }}>
                         {msg.role === 'user' ? '👤 您' : '🤖 AI'}:
                       </Text>
-                      <Paragraph style={{ marginTop: 8, marginBottom: 0, whiteSpace: 'pre-wrap' }}>
-                        {msg.content}
-                      </Paragraph>
+                      <div style={{ marginTop: 8, marginBottom: 0 }} className="markdown-content">
+                        <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                          {msg.content}
+                        </ReactMarkdown>
+                      </div>
                     </div>
                   </List.Item>
                 )}
