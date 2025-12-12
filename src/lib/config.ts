@@ -5,11 +5,11 @@
  */
 
 // CORS 代理配置
-export const USE_PROXY = false; // 设为 true 启用代理
+export const USE_PROXY = true; // 设为 true 启用代理
 export const PROXY_URL = 'http://localhost:3001/api/proxy';
 
-// 开发模式
-export const DEV_MODE = import.meta.env.DEV;
+// 开发模式（如果需要可以手动设置）
+export const DEV_MODE = true;
 
 /**
  * 使用说明：
