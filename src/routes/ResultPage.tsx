@@ -121,11 +121,18 @@ export default function ResultPage() {
   };
 
   // Render loading state
-  if (analysisStatus === 'parsing' || analysisStatus === 'extractingProfile' || analysisStatus === 'analyzing') {
-    const stepMap = {
+  const isAnalyzing = analysisStatus === 'parsing' || analysisStatus === 'extractingProfile' ||
+                      analysisStatus === 'stage1' || analysisStatus === 'stage2' ||
+                      analysisStatus === 'stage3' || analysisStatus === 'stage4';
+
+  if (isAnalyzing) {
+    const stepMap: Record<string, number> = {
       parsing: 0,
       extractingProfile: 1,
-      analyzing: 2
+      stage1: 2,
+      stage2: 2,
+      stage3: 2,
+      stage4: 2
     };
 
     return (
@@ -138,11 +145,11 @@ export default function ResultPage() {
 
         <Card>
           <Steps
-            current={stepMap[analysisStatus]}
+            current={stepMap[analysisStatus] || 0}
             items={[
               { title: '解析文档', icon: analysisStatus === 'parsing' ? <LoadingOutlined /> : undefined },
               { title: '提取企业信息', icon: analysisStatus === 'extractingProfile' ? <LoadingOutlined /> : undefined },
-              { title: '多维度分析', icon: analysisStatus === 'analyzing' ? <LoadingOutlined /> : undefined }
+              { title: '多维度分析', icon: isAnalyzing && analysisStatus !== 'parsing' && analysisStatus !== 'extractingProfile' ? <LoadingOutlined /> : undefined }
             ]}
           />
 

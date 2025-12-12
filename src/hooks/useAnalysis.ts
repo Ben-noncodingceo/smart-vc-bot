@@ -56,7 +56,7 @@ export function useAnalysis() {
       setCompanyProfile(companyProfile);
 
       // Step 2: Multi-dimensional Analysis
-      setAnalysisStatus('analyzing');
+      setAnalysisStatus('stage1');
 
       // Create a shorter summary for analysis
       const documentSummary = truncateText(documentText, 8000);

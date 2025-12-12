@@ -1,4 +1,4 @@
-import { AnalysisItemId, CompanyProfile } from '../types';
+import { AnalysisItemId, CompanyProfile, AnalysisStage, ANALYSIS_STAGES } from '../types';
 
 /**
  * Step 1: Extract Company Profile
@@ -161,6 +161,25 @@ ${selectedItems.includes('papers') ? `
 - 对于未勾选的维度，直接设为 null`;
 
   return { systemPrompt, userPrompt };
+}
+
+/**
+ * Staged Analysis Prompt - for multi-stage analysis
+ */
+export function getStagedAnalysisPrompt(
+  stage: AnalysisStage,
+  companyProfile: CompanyProfile,
+  documentSummary: string
+): {
+  systemPrompt: string;
+  userPrompt: string;
+} {
+  const stageConfig = ANALYSIS_STAGES.find(s => s.stage === stage);
+  if (!stageConfig) {
+    throw new Error(`Invalid stage: ${stage}`);
+  }
+
+  return getAnalysisPrompt(companyProfile, documentSummary, stageConfig.items);
 }
 
 /**
