@@ -11,9 +11,9 @@ const isProduction = window.location.hostname !== 'localhost' &&
 // CORS 代理配置
 export const USE_PROXY = true; // 始终启用代理
 
-// 生产环境代理 URL - 部署 Cloudflare Worker 后替换这个 URL
-// 部署命令: wrangler deploy
-const PRODUCTION_PROXY_URL = 'https://ai-bp-cors-proxy.YOUR-SUBDOMAIN.workers.dev';
+// 生产环境代理 URL - 使用 Cloudflare Pages Functions
+// 自动部署，无需额外配置！
+const PRODUCTION_PROXY_URL = '/api/proxy';
 
 // 开发环境代理 URL
 const DEVELOPMENT_PROXY_URL = 'http://localhost:3001/api/proxy';
