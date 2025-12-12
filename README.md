@@ -38,6 +38,8 @@
 
 ## 开发
 
+### 快速开始
+
 ```bash
 # 安装依赖
 npm install
@@ -51,6 +53,40 @@ npm run build
 # 预览构建结果
 npm run preview
 ```
+
+### ⚠️ CORS 问题解决
+
+如果遇到 "Failed to fetch" 错误，这是浏览器的 CORS（跨域）限制导致的。有以下解决方案：
+
+#### 方案 1：使用本地代理服务器（推荐用于开发）
+
+1. 打开新终端，启动代理服务器：
+```bash
+cd cors-proxy
+npm install
+npm start
+```
+
+2. 编辑 `src/lib/config.ts`，启用代理：
+```typescript
+export const USE_PROXY = true;  // 改为 true
+```
+
+3. 重启前端应用
+
+#### 方案 2：使用支持 CORS 的 API
+
+DeepSeek API 支持 CORS，可以直接使用：
+- 选择 "DeepSeek" 作为供应商
+- 输入您的 DeepSeek API Key
+- 保持 `USE_PROXY = false`
+
+#### 方案 3：完整解决方案
+
+查看 [CORS_SOLUTION.md](./CORS_SOLUTION.md) 了解更多解决方案，包括：
+- Cloudflare Workers 部署
+- Vercel Serverless Functions
+- 生产环境最佳实践
 
 ## 部署
 
