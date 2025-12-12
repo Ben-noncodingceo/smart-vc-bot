@@ -14,18 +14,16 @@ export interface ProviderConfig {
   extractContent: (response: any) => string;
 }
 
-// Analysis Options
+// Analysis Options - New 8 dimensions
 export type AnalysisItemId =
-  | 'marketCap'
-  | 'frontier'
-  | 'publicPeers'
-  | 'stage'
-  | 'revenue'
-  | 'profit'
-  | 'policyRisk'
-  | 'investmentValue'
-  | 'financingCases'
-  | 'papers';
+  | 'industryBackground'      // 行业背景简述
+  | 'nationalPolicy'          // 国家政策简述
+  | 'marketDemand'            // 市场需求分析
+  | 'technologyStatus'        // 技术现状（前沿论文）
+  | 'applicationTrends'       // 应用趋势
+  | 'businessModel'           // 商业模式
+  | 'industryEcosystem'       // 产业格局、上下游关系
+  | 'investmentOpportunity';  // 投资机会、投资价值
 
 export interface AnalysisOption {
   id: AnalysisItemId;
@@ -53,98 +51,44 @@ export interface CompanyProfile {
   }[];
 }
 
-// Market Cap Analysis
-export interface MarketCapAnalysis {
-  industryDefinition: string;
-  globalMarketCapRange?: {
-    min: number | null;
-    max: number | null;
+// 1. Industry Background Analysis (行业背景简述)
+export interface IndustryBackgroundAnalysis {
+  industryOverview: string;          // 行业概况
+  marketSize: {                      // 市场规模
+    global?: number | null;
+    china?: number | null;
     currency: string;
-  };
-  keyPublicCompanies?: {
-    name: string;
-    ticker?: string;
-    exchange?: string;
-    country?: string;
-  }[];
-  notes?: string;
-}
-
-// Frontier Analysis
-export interface FrontierAnalysis {
-  keyTrends: string[];
-  timeHorizon: string;
-  notes?: string;
-}
-
-// Public Peers Analysis
-export interface PublicPeer {
-  name: string;
-  ticker?: string;
-  exchange?: string;
-  country?: string;
-  isComparable: boolean;
-  reason?: string;
-  last3YearsCoreMetrics?: {
     year: number;
-    revenue?: number | null;
-    profit?: number | null;
-    marketCap?: number | null;
-    currency?: string;
+  };
+  keyPlayers: string[];              // 主要参与者
+  developmentStage: string;          // 发展阶段
+  notes?: string;
+}
+
+// 2. National Policy Analysis (国家政策简述)
+export interface NationalPolicyAnalysis {
+  relevantPolicies: {                // 相关政策
+    policyName: string;
+    issuingAuthority: string;        // 发布机构
+    effectiveDate?: string;
+    summary: string;
   }[];
-}
-
-export interface PublicPeersAnalysis {
-  hasComparablePeers: boolean;
-  peers: PublicPeer[];
+  policySupport: 'strong' | 'moderate' | 'weak' | 'unknown';  // 政策支持力度
+  regulatoryRisks: string[];         // 监管风险
   notes?: string;
 }
 
-// Stage Analysis
-export interface StageAnalysis {
-  stage: CompanyProfile['inferredStage'];
-  reasoning: string;
-}
-
-// Profit Analysis
-export interface ProfitAnalysis {
-  currentStatus: 'profitable' | 'lossMaking' | 'breakeven' | 'unknown';
-  unitEconomics?: string;
-  potentialPathToProfitability?: string;
-}
-
-// Policy Risk Analysis
-export interface PolicyRiskAnalysis {
-  riskLevel: 'low' | 'medium' | 'high' | 'unknown';
-  keyRisks: string[];
-  jurisdictions: string[];
-}
-
-// Investment Value Analysis
-export interface InvestmentValueAnalysis {
-  rating: 'high' | 'medium' | 'low';
-  keyUpsides: string[];
-  keyRisks: string[];
-  targetInvestorProfile?: string;
-}
-
-// Financing Cases Analysis
-export interface FinancingCase {
-  companyName: string;
-  region?: string;
-  round?: string;
-  amount?: number | null;
-  currency?: string;
-  date?: string;
-  leadInvestors?: string[];
-}
-
-export interface FinancingCasesAnalysis {
-  cases: FinancingCase[];
+// 3. Market Demand Analysis (市场需求分析)
+export interface MarketDemandAnalysis {
+  targetCustomers: string[];         // 目标客户群体
+  painPoints: string[];              // 客户痛点
+  marketGrowthRate?: number | null;  // 市场增长率 (%)
+  demandDrivers: string[];           // 需求驱动因素
+  competitiveLandscape: string;      // 竞争格局描述
   notes?: string;
 }
 
-// Papers Analysis
+// 4. Technology Status Analysis (技术现状 - 前沿论文)
 export interface PaperInfo {
   title: string;
   authors: string[];
@@ -155,25 +99,87 @@ export interface PaperInfo {
   keyChallenges: string;
 }
 
-export interface PapersAnalysis {
-  isHighTechIndustry: boolean;
-  papers: PaperInfo[];
+export interface TechnologyStatusAnalysis {
+  technologyOverview: string;        // 技术概况
+  coreTechnologies: string[];        // 核心技术
+  technologyMaturity: 'early' | 'growing' | 'mature' | 'declining';  // 技术成熟度
+  papers: PaperInfo[];               // 前沿论文（5篇）
+  technicalBarriers: string[];       // 技术壁垒
+  notes?: string;
+}
+
+// 5. Application Trends Analysis (应用趋势)
+export interface ApplicationTrendsAnalysis {
+  currentApplications: string[];     // 当前应用场景
+  emergingApplications: string[];    // 新兴应用场景
+  adoptionRate: 'high' | 'medium' | 'low' | 'unknown';  // 应用普及率
+  futureProspects: string;           // 未来前景
+  timeHorizon: string;               // 时间范围
+  notes?: string;
+}
+
+// 6. Business Model Analysis (商业模式)
+export interface BusinessModelAnalysis {
+  revenueStreams: string[];          // 收入来源
+  costStructure: string;             // 成本结构
+  valueProposition: string;          // 价值主张
+  customerChannels: string[];        // 客户渠道
+  keyResources: string[];            // 关键资源
+  keyActivities: string[];           // 关键活动
+  scalability: 'high' | 'medium' | 'low';  // 可扩展性
+  notes?: string;
+}
+
+// 7. Industry Ecosystem Analysis (产业格局、上下游关系)
+export interface IndustryEcosystemAnalysis {
+  upstreamSuppliers: {               // 上游供应商
+    category: string;
+    keyPlayers: string[];
+    bargainingPower: 'strong' | 'moderate' | 'weak';
+  }[];
+  downstreamCustomers: {             // 下游客户
+    category: string;
+    keyPlayers: string[];
+    bargainingPower: 'strong' | 'moderate' | 'weak';
+  }[];
+  competitors: {                     // 主要竞争对手
+    name: string;
+    marketShare?: number | null;
+    strengths: string[];
+    weaknesses: string[];
+  }[];
+  valueChainPosition: string;        // 价值链定位
+  notes?: string;
+}
+
+// 8. Investment Opportunity Analysis (投资机会、投资价值)
+export interface InvestmentOpportunityAnalysis {
+  investmentRating: 'high' | 'medium' | 'low';  // 投资评级
+  keyInvestmentHighlights: string[]; // 关键投资亮点
+  riskFactors: string[];             // 风险因素
+  valuationRange?: {                 // 估值区间
+    min: number | null;
+    max: number | null;
+    currency: string;
+  };
+  exitStrategy: string[];            // 退出策略
+  recommendedInvestmentStage: string;  // 建议投资阶段
+  targetReturn?: string;             // 目标回报
+  timeframe?: string;                // 投资周期
   notes?: string;
 }
 
 // Complete Analysis Result
 export interface AnalysisResult {
   companyProfile: CompanyProfile;
-  marketCap?: MarketCapAnalysis | null;
-  frontier?: FrontierAnalysis | null;
-  publicPeers?: PublicPeersAnalysis | null;
-  stage?: StageAnalysis | null;
-  revenue?: CompanyProfile['revenueByYear'] | null;
-  profit?: ProfitAnalysis | null;
-  policyRisk?: PolicyRiskAnalysis | null;
-  investmentValue?: InvestmentValueAnalysis | null;
-  financingCases?: FinancingCasesAnalysis | null;
-  papers?: PapersAnalysis | null;
+  industryBackground?: IndustryBackgroundAnalysis | null;
+  nationalPolicy?: NationalPolicyAnalysis | null;
+  marketDemand?: MarketDemandAnalysis | null;
+  technologyStatus?: TechnologyStatusAnalysis | null;
+  applicationTrends?: ApplicationTrendsAnalysis | null;
+  businessModel?: BusinessModelAnalysis | null;
+  industryEcosystem?: IndustryEcosystemAnalysis | null;
+  investmentOpportunity?: InvestmentOpportunityAnalysis | null;
 }
 
 // Staged Analysis
@@ -189,27 +195,27 @@ export interface StagedAnalysisConfig {
 export const ANALYSIS_STAGES: StagedAnalysisConfig[] = [
   {
     stage: 1,
-    label: '技术、行业前沿',
-    description: '分析企业技术创新能力和行业前沿定位',
-    items: ['papers', 'frontier', 'publicPeers']
+    label: '行业与政策背景',
+    description: '分析行业背景和国家政策环境',
+    items: ['industryBackground', 'nationalPolicy']
   },
   {
     stage: 2,
-    label: '商业数据商业价值',
-    description: '分析企业商业模式和市场价值',
-    items: ['marketCap', 'revenue', 'profit', 'financingCases', 'policyRisk']
+    label: '市场与技术分析',
+    description: '分析市场需求和技术现状',
+    items: ['marketDemand', 'technologyStatus']
   },
   {
     stage: 3,
-    label: '团队、执行',
-    description: '分析团队执行能力和发展阶段',
-    items: ['stage']
+    label: '应用与商业模式',
+    description: '分析应用趋势和商业模式',
+    items: ['applicationTrends', 'businessModel']
   },
   {
     stage: 4,
-    label: '综合评价投资价值',
-    description: '综合评估投资价值和风险',
-    items: ['investmentValue']
+    label: '产业生态与投资价值',
+    description: '分析产业格局和投资机会',
+    items: ['industryEcosystem', 'investmentOpportunity']
   }
 ];
 

@@ -21,6 +21,8 @@ import {
   RightOutlined,
   SendOutlined
 } from '@ant-design/icons';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { useAppStore } from '../lib/store';
 import { useStagedAnalysis } from '../hooks/useStagedAnalysis';
 import { useAnalysis } from '../hooks/useAnalysis';
@@ -29,16 +31,14 @@ import { exportAsJSON, exportAsMarkdown, downloadFile, exportAsPDF, exportAsDOCX
 import CompanySummary from '../components/ResultSections/CompanySummary';
 import { AnalysisStage, ANALYSIS_STAGES } from '../types';
 import {
-  PapersSection,
-  FrontierSection,
-  PublicPeersSection,
-  MarketCapSection,
-  RevenueSection,
-  ProfitSection,
-  FinancingCasesSection,
-  PolicyRiskSection,
-  StageSection,
-  InvestmentValueSection
+  IndustryBackgroundSection,
+  NationalPolicySection,
+  MarketDemandSection,
+  TechnologyStatusSection,
+  ApplicationTrendsSection,
+  BusinessModelSection,
+  IndustryEcosystemSection,
+  InvestmentOpportunitySection
 } from '../components/ResultSections/AnalysisSections';
 
 const { Title, Paragraph, Text } = Typography;
@@ -180,28 +180,26 @@ export default function StagedResultPage() {
       >
         {stage === 1 && (
           <>
-            {stageResult.papers && <PapersSection data={stageResult.papers} />}
-            {stageResult.frontier && <FrontierSection data={stageResult.frontier} />}
-            {stageResult.publicPeers && <PublicPeersSection data={stageResult.publicPeers} />}
+            {stageResult.industryBackground && <IndustryBackgroundSection data={stageResult.industryBackground} />}
+            {stageResult.nationalPolicy && <NationalPolicySection data={stageResult.nationalPolicy} />}
           </>
         )}
         {stage === 2 && (
           <>
-            {stageResult.marketCap && <MarketCapSection data={stageResult.marketCap} />}
-            {stageResult.revenue && <RevenueSection data={stageResult.revenue} />}
-            {stageResult.profit && <ProfitSection data={stageResult.profit} />}
-            {stageResult.financingCases && <FinancingCasesSection data={stageResult.financingCases} />}
-            {stageResult.policyRisk && <PolicyRiskSection data={stageResult.policyRisk} />}
+            {stageResult.marketDemand && <MarketDemandSection data={stageResult.marketDemand} />}
+            {stageResult.technologyStatus && <TechnologyStatusSection data={stageResult.technologyStatus} />}
           </>
         )}
         {stage === 3 && (
           <>
-            {stageResult.stage && <StageSection data={stageResult.stage} />}
+            {stageResult.applicationTrends && <ApplicationTrendsSection data={stageResult.applicationTrends} />}
+            {stageResult.businessModel && <BusinessModelSection data={stageResult.businessModel} />}
           </>
         )}
         {stage === 4 && (
           <>
-            {stageResult.investmentValue && <InvestmentValueSection data={stageResult.investmentValue} />}
+            {stageResult.industryEcosystem && <IndustryEcosystemSection data={stageResult.industryEcosystem} />}
+            {stageResult.investmentOpportunity && <InvestmentOpportunitySection data={stageResult.investmentOpportunity} />}
           </>
         )}
       </Card>
@@ -382,9 +380,11 @@ export default function StagedResultPage() {
                       <Text strong style={{ color: msg.role === 'user' ? '#1890ff' : '#52c41a' }}>
                         {msg.role === 'user' ? '👤 您' : '🤖 AI'}:
                       </Text>
-                      <Paragraph style={{ marginTop: 8, marginBottom: 0, whiteSpace: 'pre-wrap' }}>
-                        {msg.content}
-                      </Paragraph>
+                      <div style={{ marginTop: 8, marginBottom: 0 }} className="markdown-content">
+                        <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                          {msg.content}
+                        </ReactMarkdown>
+                      </div>
                     </div>
                   </List.Item>
                 )}

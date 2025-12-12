@@ -2,16 +2,14 @@ import { Tabs } from 'antd';
 import type { TabsProps } from 'antd';
 import { AnalysisResult } from '../types';
 import {
-  MarketCapSection,
-  FrontierSection,
-  PublicPeersSection,
-  PapersSection,
-  StageSection,
-  RevenueSection,
-  ProfitSection,
-  PolicyRiskSection,
-  InvestmentValueSection,
-  FinancingCasesSection,
+  IndustryBackgroundSection,
+  NationalPolicySection,
+  MarketDemandSection,
+  TechnologyStatusSection,
+  ApplicationTrendsSection,
+  BusinessModelSection,
+  IndustryEcosystemSection,
+  InvestmentOpportunitySection,
 } from './ResultSections/AnalysisSections';
 
 interface Props {
@@ -21,38 +19,42 @@ interface Props {
 export default function AnalysisCategories({ result }: Props) {
   const items: TabsProps['items'] = [
     {
-      key: 'technical',
-      label: '🔬 技术分析判断',
+      key: 'industry-policy',
+      label: '🏭 行业与政策',
       children: (
         <div>
-          {result.papers && <PapersSection data={result.papers} />}
-          {result.frontier && <FrontierSection data={result.frontier} />}
-          {result.publicPeers && <PublicPeersSection data={result.publicPeers} />}
+          {result.industryBackground && <IndustryBackgroundSection data={result.industryBackground} />}
+          {result.nationalPolicy && <NationalPolicySection data={result.nationalPolicy} />}
         </div>
       ),
     },
     {
-      key: 'business',
-      label: '💼 商业分析判断',
+      key: 'market-tech',
+      label: '📊 市场与技术',
       children: (
         <div>
-          {result.marketCap && <MarketCapSection data={result.marketCap} />}
-          {result.revenue && <RevenueSection data={result.revenue} />}
-          {result.profit && <ProfitSection data={result.profit} />}
-          {result.investmentValue && <InvestmentValueSection data={result.investmentValue} />}
-          {result.financingCases && <FinancingCasesSection data={result.financingCases} />}
-          {result.policyRisk && <PolicyRiskSection data={result.policyRisk} />}
+          {result.marketDemand && <MarketDemandSection data={result.marketDemand} />}
+          {result.technologyStatus && <TechnologyStatusSection data={result.technologyStatus} />}
         </div>
       ),
     },
     {
-      key: 'team',
-      label: '👥 团队执行分析判断',
+      key: 'business-app',
+      label: '💼 商业与应用',
       children: (
         <div>
-          {result.stage && <StageSection data={result.stage} />}
-          {result.revenue && <RevenueSection data={result.revenue} />}
-          {result.profit && <ProfitSection data={result.profit} />}
+          {result.businessModel && <BusinessModelSection data={result.businessModel} />}
+          {result.applicationTrends && <ApplicationTrendsSection data={result.applicationTrends} />}
+        </div>
+      ),
+    },
+    {
+      key: 'ecosystem-investment',
+      label: '🎯 产业与投资',
+      children: (
+        <div>
+          {result.industryEcosystem && <IndustryEcosystemSection data={result.industryEcosystem} />}
+          {result.investmentOpportunity && <InvestmentOpportunitySection data={result.investmentOpportunity} />}
         </div>
       ),
     },
@@ -60,7 +62,7 @@ export default function AnalysisCategories({ result }: Props) {
 
   return (
     <Tabs
-      defaultActiveKey="business"
+      defaultActiveKey="industry-policy"
       items={items}
       size="large"
       style={{ marginTop: 24 }}
