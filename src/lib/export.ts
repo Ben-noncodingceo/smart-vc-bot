@@ -27,195 +27,275 @@ export function exportAsMarkdown(result: AnalysisResult): string {
   md += `- **简介**: ${companyProfile.shortDescription}\n`;
   md += `- **是否高科技**: ${companyProfile.isHighTech ? '是' : '否'}\n\n`;
 
-  // Market Cap
-  if (result.marketCap) {
-    md += `## 行业 Market Cap\n\n`;
-    md += `**行业定义**: ${result.marketCap.industryDefinition}\n\n`;
+  // 1. Industry Background
+  if (result.industryBackground) {
+    md += `## 行业背景简述\n\n`;
+    md += `**行业概况**: ${result.industryBackground.industryOverview}\n\n`;
 
-    if (result.marketCap.globalMarketCapRange) {
-      const range = result.marketCap.globalMarketCapRange;
-      md += `**市值区间**: ${range.min || 'N/A'} - ${range.max || 'N/A'} ${range.currency}\n\n`;
+    if (result.industryBackground.marketSize) {
+      const ms = result.industryBackground.marketSize;
+      md += `**市场规模** (${ms.year}年, ${ms.currency}):\n`;
+      if (ms.global) md += `- 全球: ${ms.global} 百万\n`;
+      if (ms.china) md += `- 中国: ${ms.china} 百万\n`;
+      md += '\n';
     }
 
-    if (result.marketCap.keyPublicCompanies && result.marketCap.keyPublicCompanies.length > 0) {
-      md += `**关键上市公司**:\n`;
-      result.marketCap.keyPublicCompanies.forEach(company => {
-        md += `- ${company.name} (${company.ticker || 'N/A'}, ${company.exchange || 'N/A'}, ${company.country || 'N/A'})\n`;
+    if (result.industryBackground.keyPlayers && result.industryBackground.keyPlayers.length > 0) {
+      md += `**主要参与者**: ${result.industryBackground.keyPlayers.join(', ')}\n\n`;
+    }
+
+    md += `**发展阶段**: ${result.industryBackground.developmentStage}\n\n`;
+
+    if (result.industryBackground.notes) {
+      md += `**备注**: ${result.industryBackground.notes}\n\n`;
+    }
+  }
+
+  // 2. National Policy
+  if (result.nationalPolicy) {
+    md += `## 国家政策简述\n\n`;
+    md += `**政策支持力度**: ${result.nationalPolicy.policySupport}\n\n`;
+
+    if (result.nationalPolicy.relevantPolicies && result.nationalPolicy.relevantPolicies.length > 0) {
+      md += `**相关政策**:\n\n`;
+      result.nationalPolicy.relevantPolicies.forEach((policy, index) => {
+        md += `${index + 1}. **${policy.policyName}**\n`;
+        md += `   - 发布机构: ${policy.issuingAuthority}\n`;
+        if (policy.effectiveDate) md += `   - 生效日期: ${policy.effectiveDate}\n`;
+        md += `   - 摘要: ${policy.summary}\n\n`;
+      });
+    }
+
+    if (result.nationalPolicy.regulatoryRisks && result.nationalPolicy.regulatoryRisks.length > 0) {
+      md += `**监管风险**:\n`;
+      result.nationalPolicy.regulatoryRisks.forEach((risk, index) => {
+        md += `${index + 1}. ${risk}\n`;
       });
       md += '\n';
     }
 
-    if (result.marketCap.notes) {
-      md += `**备注**: ${result.marketCap.notes}\n\n`;
+    if (result.nationalPolicy.notes) {
+      md += `**备注**: ${result.nationalPolicy.notes}\n\n`;
     }
   }
 
-  // Frontier
-  if (result.frontier) {
-    md += `## 行业前沿发展\n\n`;
-    md += `**时间范围**: ${result.frontier.timeHorizon}\n\n`;
-    md += `**关键趋势**:\n`;
-    result.frontier.keyTrends.forEach((trend, index) => {
-      md += `${index + 1}. ${trend}\n`;
-    });
-    md += '\n';
+  // 3. Market Demand
+  if (result.marketDemand) {
+    md += `## 市场需求分析\n\n`;
 
-    if (result.frontier.notes) {
-      md += `**备注**: ${result.frontier.notes}\n\n`;
+    if (result.marketDemand.targetCustomers && result.marketDemand.targetCustomers.length > 0) {
+      md += `**目标客户群体**: ${result.marketDemand.targetCustomers.join(', ')}\n\n`;
+    }
+
+    if (result.marketDemand.painPoints && result.marketDemand.painPoints.length > 0) {
+      md += `**客户痛点**:\n`;
+      result.marketDemand.painPoints.forEach((point, index) => {
+        md += `${index + 1}. ${point}\n`;
+      });
+      md += '\n';
+    }
+
+    if (result.marketDemand.marketGrowthRate !== null && result.marketDemand.marketGrowthRate !== undefined) {
+      md += `**市场增长率**: ${result.marketDemand.marketGrowthRate}%\n\n`;
+    }
+
+    if (result.marketDemand.demandDrivers && result.marketDemand.demandDrivers.length > 0) {
+      md += `**需求驱动因素**:\n`;
+      result.marketDemand.demandDrivers.forEach((driver, index) => {
+        md += `${index + 1}. ${driver}\n`;
+      });
+      md += '\n';
+    }
+
+    md += `**竞争格局**: ${result.marketDemand.competitiveLandscape}\n\n`;
+
+    if (result.marketDemand.notes) {
+      md += `**备注**: ${result.marketDemand.notes}\n\n`;
     }
   }
 
-  // Public Peers
-  if (result.publicPeers) {
-    md += `## 国际相似上市公司\n\n`;
-    md += `**是否有可比公司**: ${result.publicPeers.hasComparablePeers ? '是' : '否'}\n\n`;
+  // 4. Technology Status
+  if (result.technologyStatus) {
+    md += `## 技术现状\n\n`;
+    md += `**技术概况**: ${result.technologyStatus.technologyOverview}\n\n`;
+    md += `**技术成熟度**: ${result.technologyStatus.technologyMaturity}\n\n`;
 
-    if (result.publicPeers.peers && result.publicPeers.peers.length > 0) {
-      result.publicPeers.peers.forEach(peer => {
-        md += `### ${peer.name}\n\n`;
-        md += `- **股票代码**: ${peer.ticker || 'N/A'}\n`;
-        md += `- **交易所**: ${peer.exchange || 'N/A'}\n`;
-        md += `- **国家**: ${peer.country || 'N/A'}\n`;
-        md += `- **是否可比**: ${peer.isComparable ? '是' : '否'}\n`;
+    if (result.technologyStatus.coreTechnologies && result.technologyStatus.coreTechnologies.length > 0) {
+      md += `**核心技术**: ${result.technologyStatus.coreTechnologies.join(', ')}\n\n`;
+    }
 
-        if (peer.reason) {
-          md += `- **可比性说明**: ${peer.reason}\n`;
+    if (result.technologyStatus.papers && result.technologyStatus.papers.length > 0) {
+      md += `**前沿论文**:\n\n`;
+      result.technologyStatus.papers.forEach((paper, index) => {
+        md += `${index + 1}. **${paper.title}**\n`;
+        const authors = Array.isArray(paper.authors) ? paper.authors.join(', ') : paper.authors;
+        md += `   - 作者: ${authors}\n`;
+        md += `   - 年份: ${paper.year}\n`;
+        if (paper.venue) md += `   - 发表于: ${paper.venue}\n`;
+        if (paper.link) md += `   - 链接: ${paper.link}\n`;
+        md += `   - 摘要: ${paper.summary}\n`;
+        md += `   - 核心挑战: ${paper.keyChallenges}\n\n`;
+      });
+    }
+
+    if (result.technologyStatus.technicalBarriers && result.technologyStatus.technicalBarriers.length > 0) {
+      md += `**技术壁垒**:\n`;
+      result.technologyStatus.technicalBarriers.forEach((barrier, index) => {
+        md += `${index + 1}. ${barrier}\n`;
+      });
+      md += '\n';
+    }
+
+    if (result.technologyStatus.notes) {
+      md += `**备注**: ${result.technologyStatus.notes}\n\n`;
+    }
+  }
+
+  // 5. Application Trends
+  if (result.applicationTrends) {
+    md += `## 应用趋势\n\n`;
+    md += `**应用普及率**: ${result.applicationTrends.adoptionRate}\n`;
+    md += `**时间范围**: ${result.applicationTrends.timeHorizon}\n\n`;
+
+    if (result.applicationTrends.currentApplications && result.applicationTrends.currentApplications.length > 0) {
+      md += `**当前应用场景**:\n`;
+      result.applicationTrends.currentApplications.forEach((app, index) => {
+        md += `${index + 1}. ${app}\n`;
+      });
+      md += '\n';
+    }
+
+    if (result.applicationTrends.emergingApplications && result.applicationTrends.emergingApplications.length > 0) {
+      md += `**新兴应用场景**:\n`;
+      result.applicationTrends.emergingApplications.forEach((app, index) => {
+        md += `${index + 1}. ${app}\n`;
+      });
+      md += '\n';
+    }
+
+    md += `**未来前景**: ${result.applicationTrends.futureProspects}\n\n`;
+
+    if (result.applicationTrends.notes) {
+      md += `**备注**: ${result.applicationTrends.notes}\n\n`;
+    }
+  }
+
+  // 6. Business Model
+  if (result.businessModel) {
+    md += `## 商业模式\n\n`;
+    md += `**价值主张**: ${result.businessModel.valueProposition}\n\n`;
+    md += `**可扩展性**: ${result.businessModel.scalability}\n\n`;
+
+    if (result.businessModel.revenueStreams && result.businessModel.revenueStreams.length > 0) {
+      md += `**收入来源**:\n`;
+      result.businessModel.revenueStreams.forEach((stream, index) => {
+        md += `${index + 1}. ${stream}\n`;
+      });
+      md += '\n';
+    }
+
+    md += `**成本结构**: ${result.businessModel.costStructure}\n\n`;
+
+    if (result.businessModel.customerChannels && result.businessModel.customerChannels.length > 0) {
+      md += `**客户渠道**: ${result.businessModel.customerChannels.join(', ')}\n\n`;
+    }
+
+    if (result.businessModel.keyResources && result.businessModel.keyResources.length > 0) {
+      md += `**关键资源**: ${result.businessModel.keyResources.join(', ')}\n\n`;
+    }
+
+    if (result.businessModel.keyActivities && result.businessModel.keyActivities.length > 0) {
+      md += `**关键活动**: ${result.businessModel.keyActivities.join(', ')}\n\n`;
+    }
+
+    if (result.businessModel.notes) {
+      md += `**备注**: ${result.businessModel.notes}\n\n`;
+    }
+  }
+
+  // 7. Industry Ecosystem
+  if (result.industryEcosystem) {
+    md += `## 产业格局、上下游关系\n\n`;
+    md += `**价值链定位**: ${result.industryEcosystem.valueChainPosition}\n\n`;
+
+    if (result.industryEcosystem.upstreamSuppliers && result.industryEcosystem.upstreamSuppliers.length > 0) {
+      md += `**上游供应商**:\n`;
+      result.industryEcosystem.upstreamSuppliers.forEach(supplier => {
+        md += `- **${supplier.category}** (议价能力: ${supplier.bargainingPower})\n`;
+        md += `  关键参与者: ${supplier.keyPlayers.join(', ')}\n`;
+      });
+      md += '\n';
+    }
+
+    if (result.industryEcosystem.downstreamCustomers && result.industryEcosystem.downstreamCustomers.length > 0) {
+      md += `**下游客户**:\n`;
+      result.industryEcosystem.downstreamCustomers.forEach(customer => {
+        md += `- **${customer.category}** (议价能力: ${customer.bargainingPower})\n`;
+        md += `  关键参与者: ${customer.keyPlayers.join(', ')}\n`;
+      });
+      md += '\n';
+    }
+
+    if (result.industryEcosystem.competitors && result.industryEcosystem.competitors.length > 0) {
+      md += `**主要竞争对手**:\n\n`;
+      result.industryEcosystem.competitors.forEach((competitor, index) => {
+        md += `${index + 1}. **${competitor.name}**\n`;
+        if (competitor.marketShare) md += `   - 市场份额: ${competitor.marketShare}%\n`;
+        if (competitor.strengths && competitor.strengths.length > 0) {
+          md += `   - 优势: ${competitor.strengths.join(', ')}\n`;
         }
-
-        if (peer.last3YearsCoreMetrics && peer.last3YearsCoreMetrics.length > 0) {
-          md += `\n**近3年核心数据**:\n\n`;
-          md += `| 年份 | 收入 | 利润 | 市值 |\n`;
-          md += `|------|------|------|------|\n`;
-          peer.last3YearsCoreMetrics.forEach(metric => {
-            const revenue = metric.revenue !== null ? `${metric.revenue} ${metric.currency || ''}` : 'N/A';
-            const profit = metric.profit !== null ? `${metric.profit} ${metric.currency || ''}` : 'N/A';
-            const marketCap = metric.marketCap !== null ? `${metric.marketCap} ${metric.currency || ''}` : 'N/A';
-            md += `| ${metric.year} | ${revenue} | ${profit} | ${marketCap} |\n`;
-          });
+        if (competitor.weaknesses && competitor.weaknesses.length > 0) {
+          md += `   - 劣势: ${competitor.weaknesses.join(', ')}\n`;
         }
         md += '\n';
       });
     }
 
-    if (result.publicPeers.notes) {
-      md += `**备注**: ${result.publicPeers.notes}\n\n`;
+    if (result.industryEcosystem.notes) {
+      md += `**备注**: ${result.industryEcosystem.notes}\n\n`;
     }
   }
 
-  // Stage
-  if (result.stage) {
-    md += `## 企业阶段判断\n\n`;
-    md += `**阶段**: ${result.stage.stage}\n\n`;
-    md += `**判断依据**: ${result.stage.reasoning}\n\n`;
-  }
+  // 8. Investment Opportunity
+  if (result.investmentOpportunity) {
+    md += `## 投资机会、投资价值\n\n`;
+    md += `**投资评级**: ${result.investmentOpportunity.investmentRating}\n`;
+    md += `**建议投资阶段**: ${result.investmentOpportunity.recommendedInvestmentStage}\n\n`;
 
-  // Revenue
-  if (result.revenue && result.revenue.length > 0) {
-    md += `## 企业 Revenue 按年\n\n`;
-    md += `| 年份 | 金额 | 货币 | 备注 |\n`;
-    md += `|------|------|------|------|\n`;
-    result.revenue.forEach(rev => {
-      const amount = rev.amount !== null ? rev.amount : 'N/A';
-      md += `| ${rev.year} | ${amount} | ${rev.currency || 'N/A'} | ${rev.note || '-'} |\n`;
-    });
-    md += '\n';
-  }
-
-  // Profit
-  if (result.profit) {
-    md += `## 盈利情况\n\n`;
-    md += `**当前状态**: ${result.profit.currentStatus}\n\n`;
-
-    if (result.profit.unitEconomics) {
-      md += `**单位经济**: ${result.profit.unitEconomics}\n\n`;
+    if (result.investmentOpportunity.targetReturn) {
+      md += `**目标回报**: ${result.investmentOpportunity.targetReturn}\n`;
+    }
+    if (result.investmentOpportunity.timeframe) {
+      md += `**投资周期**: ${result.investmentOpportunity.timeframe}\n\n`;
     }
 
-    if (result.profit.potentialPathToProfitability) {
-      md += `**潜在盈利路径**: ${result.profit.potentialPathToProfitability}\n\n`;
-    }
-  }
-
-  // Policy Risk
-  if (result.policyRisk) {
-    md += `## 政策风险\n\n`;
-    md += `**风险等级**: ${result.policyRisk.riskLevel}\n\n`;
-
-    if (result.policyRisk.keyRisks && result.policyRisk.keyRisks.length > 0) {
-      md += `**关键风险点**:\n`;
-      result.policyRisk.keyRisks.forEach((risk, index) => {
-        md += `${index + 1}. ${risk}\n`;
-      });
-      md += '\n';
+    if (result.investmentOpportunity.valuationRange) {
+      const vr = result.investmentOpportunity.valuationRange;
+      md += `**估值区间**: ${vr.min || 'N/A'} - ${vr.max || 'N/A'} ${vr.currency} (百万)\n\n`;
     }
 
-    if (result.policyRisk.jurisdictions && result.policyRisk.jurisdictions.length > 0) {
-      md += `**涉及地区**: ${result.policyRisk.jurisdictions.join(', ')}\n\n`;
-    }
-  }
-
-  // Investment Value
-  if (result.investmentValue) {
-    md += `## 投资价值评级\n\n`;
-    md += `**评级**: ${result.investmentValue.rating}\n\n`;
-
-    if (result.investmentValue.keyUpsides && result.investmentValue.keyUpsides.length > 0) {
+    if (result.investmentOpportunity.keyInvestmentHighlights && result.investmentOpportunity.keyInvestmentHighlights.length > 0) {
       md += `**关键投资亮点**:\n`;
-      result.investmentValue.keyUpsides.forEach((upside, index) => {
-        md += `${index + 1}. ${upside}\n`;
+      result.investmentOpportunity.keyInvestmentHighlights.forEach((highlight, index) => {
+        md += `${index + 1}. ${highlight}\n`;
       });
       md += '\n';
     }
 
-    if (result.investmentValue.keyRisks && result.investmentValue.keyRisks.length > 0) {
-      md += `**关键风险点**:\n`;
-      result.investmentValue.keyRisks.forEach((risk, index) => {
+    if (result.investmentOpportunity.riskFactors && result.investmentOpportunity.riskFactors.length > 0) {
+      md += `**风险因素**:\n`;
+      result.investmentOpportunity.riskFactors.forEach((risk, index) => {
         md += `${index + 1}. ${risk}\n`;
       });
       md += '\n';
     }
 
-    if (result.investmentValue.targetInvestorProfile) {
-      md += `**目标投资人画像**: ${result.investmentValue.targetInvestorProfile}\n\n`;
+    if (result.investmentOpportunity.exitStrategy && result.investmentOpportunity.exitStrategy.length > 0) {
+      md += `**退出策略**: ${result.investmentOpportunity.exitStrategy.join(', ')}\n\n`;
     }
-  }
 
-  // Financing Cases
-  if (result.financingCases && result.financingCases.cases.length > 0) {
-    md += `## 相似企业融资案例\n\n`;
-    md += `| 公司名称 | 地区 | 轮次 | 金额 | 日期 | 主导机构 |\n`;
-    md += `|----------|------|------|------|------|----------|\n`;
-    result.financingCases.cases.forEach(fc => {
-      const amount = fc.amount !== null ? `${fc.amount} ${fc.currency || ''}` : 'N/A';
-      const investors = Array.isArray(fc.leadInvestors) ? fc.leadInvestors.join(', ') : 'N/A';
-      md += `| ${fc.companyName} | ${fc.region || 'N/A'} | ${fc.round || 'N/A'} | ${amount} | ${fc.date || 'N/A'} | ${investors} |\n`;
-    });
-    md += '\n';
-
-    if (result.financingCases.notes) {
-      md += `**备注**: ${result.financingCases.notes}\n\n`;
-    }
-  }
-
-  // Papers
-  if (result.papers && result.papers.isHighTechIndustry && result.papers.papers.length > 0) {
-    md += `## 科研文献\n\n`;
-    result.papers.papers.forEach((paper, index) => {
-      md += `### ${index + 1}. ${paper.title}\n\n`;
-      const authors = Array.isArray(paper.authors) ? paper.authors.join(', ') : paper.authors;
-      md += `- **作者**: ${authors}\n`;
-      md += `- **年份**: ${paper.year}\n`;
-      if (paper.venue) {
-        md += `- **发表于**: ${paper.venue}\n`;
-      }
-      if (paper.link) {
-        md += `- **链接**: ${paper.link}\n`;
-      }
-      md += `- **摘要**: ${paper.summary}\n`;
-      md += `- **核心挑战**: ${paper.keyChallenges}\n\n`;
-    });
-
-    if (result.papers.notes) {
-      md += `**备注**: ${result.papers.notes}\n\n`;
+    if (result.investmentOpportunity.notes) {
+      md += `**备注**: ${result.investmentOpportunity.notes}\n\n`;
     }
   }
 
@@ -348,161 +428,149 @@ export async function exportAsDOCX(result: AnalysisResult, filename: string): Pr
   }));
   children.push(new Paragraph({ text: '' }));
 
-  // ========== 阶段 1: 技术、行业前沿 ==========
-  children.push(new Paragraph({ text: '阶段 1: 技术、行业前沿', heading: HeadingLevel.HEADING_1 }));
-  children.push(new Paragraph({ text: '' }));
-
-  // Papers
-  if (result.papers && result.papers.papers.length > 0) {
-    children.push(new Paragraph({ text: '核心论文', heading: HeadingLevel.HEADING_2 }));
-    result.papers.papers.forEach((paper, index) => {
-      children.push(new Paragraph({
-        text: `${index + 1}. ${paper.title}`,
-        bullet: { level: 0 },
-      }));
-      const authors = Array.isArray(paper.authors) ? paper.authors.join(', ') : paper.authors;
-      children.push(new Paragraph({
-        text: `作者: ${authors} | 年份: ${paper.year}`,
-        indent: { left: 720 },
-      }));
-      children.push(new Paragraph({
-        text: `摘要: ${paper.summary}`,
-        indent: { left: 720 },
-      }));
-    });
+  // ========== 1. Industry Background ==========
+  if (result.industryBackground) {
+    children.push(new Paragraph({ text: '行业背景简述', heading: HeadingLevel.HEADING_1 }));
+    children.push(new Paragraph({
+      children: [
+        new TextRun({ text: '行业概况: ', bold: true }),
+        new TextRun(result.industryBackground.industryOverview),
+      ],
+    }));
+    children.push(new Paragraph({
+      children: [
+        new TextRun({ text: '发展阶段: ', bold: true }),
+        new TextRun(result.industryBackground.developmentStage),
+      ],
+    }));
     children.push(new Paragraph({ text: '' }));
   }
 
-  // Frontier
-  if (result.frontier) {
-    children.push(new Paragraph({ text: '行业前沿发展', heading: HeadingLevel.HEADING_2 }));
+  // ========== 2. National Policy ==========
+  if (result.nationalPolicy) {
+    children.push(new Paragraph({ text: '国家政策简述', heading: HeadingLevel.HEADING_1 }));
+    children.push(new Paragraph({
+      children: [
+        new TextRun({ text: '政策支持力度: ', bold: true }),
+        new TextRun(result.nationalPolicy.policySupport),
+      ],
+    }));
+    if (result.nationalPolicy.relevantPolicies && result.nationalPolicy.relevantPolicies.length > 0) {
+      children.push(new Paragraph({
+        children: [new TextRun({ text: '相关政策:', bold: true })],
+      }));
+      result.nationalPolicy.relevantPolicies.forEach(policy => {
+        children.push(new Paragraph({
+          text: `${policy.policyName} (${policy.issuingAuthority})`,
+          bullet: { level: 0 },
+        }));
+      });
+    }
+    children.push(new Paragraph({ text: '' }));
+  }
+
+  // ========== 3. Market Demand ==========
+  if (result.marketDemand) {
+    children.push(new Paragraph({ text: '市场需求分析', heading: HeadingLevel.HEADING_1 }));
+    children.push(new Paragraph({
+      children: [
+        new TextRun({ text: '竞争格局: ', bold: true }),
+        new TextRun(result.marketDemand.competitiveLandscape),
+      ],
+    }));
+    if (result.marketDemand.marketGrowthRate) {
+      children.push(new Paragraph({
+        children: [
+          new TextRun({ text: '市场增长率: ', bold: true }),
+          new TextRun(`${result.marketDemand.marketGrowthRate}%`),
+        ],
+      }));
+    }
+    children.push(new Paragraph({ text: '' }));
+  }
+
+  // ========== 4. Technology Status ==========
+  if (result.technologyStatus) {
+    children.push(new Paragraph({ text: '技术现状', heading: HeadingLevel.HEADING_1 }));
+    children.push(new Paragraph({
+      children: [
+        new TextRun({ text: '技术概况: ', bold: true }),
+        new TextRun(result.technologyStatus.technologyOverview),
+      ],
+    }));
+    children.push(new Paragraph({
+      children: [
+        new TextRun({ text: '技术成熟度: ', bold: true }),
+        new TextRun(result.technologyStatus.technologyMaturity),
+      ],
+    }));
+
+    if (result.technologyStatus.papers && result.technologyStatus.papers.length > 0) {
+      children.push(new Paragraph({
+        children: [new TextRun({ text: '前沿论文:', bold: true })],
+      }));
+      result.technologyStatus.papers.forEach((paper, index) => {
+        children.push(new Paragraph({
+          text: `${index + 1}. ${paper.title} (${paper.year})`,
+          bullet: { level: 0 },
+        }));
+      });
+    }
+    children.push(new Paragraph({ text: '' }));
+  }
+
+  // ========== 5. Application Trends ==========
+  if (result.applicationTrends) {
+    children.push(new Paragraph({ text: '应用趋势', heading: HeadingLevel.HEADING_1 }));
+    children.push(new Paragraph({
+      children: [
+        new TextRun({ text: '未来前景: ', bold: true }),
+        new TextRun(result.applicationTrends.futureProspects),
+      ],
+    }));
     children.push(new Paragraph({
       children: [
         new TextRun({ text: '时间范围: ', bold: true }),
-        new TextRun(result.frontier.timeHorizon),
+        new TextRun(result.applicationTrends.timeHorizon),
       ],
     }));
-    children.push(new Paragraph({
-      children: [new TextRun({ text: '关键趋势:', bold: true })],
-    }));
-    result.frontier.keyTrends.forEach((trend, index) => {
-      children.push(new Paragraph({
-        text: `${index + 1}. ${trend}`,
-        bullet: { level: 0 },
-      }));
-    });
     children.push(new Paragraph({ text: '' }));
   }
 
-  // Public Peers
-  if (result.publicPeers && result.publicPeers.peers.length > 0) {
-    children.push(new Paragraph({ text: '国际相似上市公司', heading: HeadingLevel.HEADING_2 }));
-    result.publicPeers.peers.forEach(peer => {
+  // ========== 6. Business Model ==========
+  if (result.businessModel) {
+    children.push(new Paragraph({ text: '商业模式', heading: HeadingLevel.HEADING_1 }));
+    children.push(new Paragraph({
+      children: [
+        new TextRun({ text: '价值主张: ', bold: true }),
+        new TextRun(result.businessModel.valueProposition),
+      ],
+    }));
+    children.push(new Paragraph({
+      children: [
+        new TextRun({ text: '可扩展性: ', bold: true }),
+        new TextRun(result.businessModel.scalability),
+      ],
+    }));
+    children.push(new Paragraph({ text: '' }));
+  }
+
+  // ========== 7. Industry Ecosystem ==========
+  if (result.industryEcosystem) {
+    children.push(new Paragraph({ text: '产业格局、上下游关系', heading: HeadingLevel.HEADING_1 }));
+    children.push(new Paragraph({
+      children: [
+        new TextRun({ text: '价值链定位: ', bold: true }),
+        new TextRun(result.industryEcosystem.valueChainPosition),
+      ],
+    }));
+    if (result.industryEcosystem.competitors && result.industryEcosystem.competitors.length > 0) {
       children.push(new Paragraph({
-        text: `${peer.name}`,
-        bullet: { level: 0 },
+        children: [new TextRun({ text: '主要竞争对手:', bold: true })],
       }));
-      children.push(new Paragraph({
-        text: `股票代码: ${peer.ticker || 'N/A'} | 交易所: ${peer.exchange || 'N/A'}`,
-        indent: { left: 720 },
-      }));
-      if (peer.reason) {
+      result.industryEcosystem.competitors.forEach(competitor => {
         children.push(new Paragraph({
-          text: `可比性说明: ${peer.reason}`,
-          indent: { left: 720 },
-        }));
-      }
-    });
-    children.push(new Paragraph({ text: '' }));
-  }
-
-  // ========== 阶段 2: 商业数据商业价值 ==========
-  children.push(new Paragraph({ text: '阶段 2: 商业数据商业价值', heading: HeadingLevel.HEADING_1 }));
-  children.push(new Paragraph({ text: '' }));
-
-  // Market Cap
-  if (result.marketCap) {
-    children.push(new Paragraph({ text: '行业 Market Cap', heading: HeadingLevel.HEADING_2 }));
-    children.push(new Paragraph({
-      children: [
-        new TextRun({ text: '行业定义: ', bold: true }),
-        new TextRun(result.marketCap.industryDefinition),
-      ],
-    }));
-    if (result.marketCap.globalMarketCapRange) {
-      const range = result.marketCap.globalMarketCapRange;
-      children.push(new Paragraph({
-        children: [
-          new TextRun({ text: '市值区间: ', bold: true }),
-          new TextRun(`${range.min || 'N/A'} - ${range.max || 'N/A'} ${range.currency}`),
-        ],
-      }));
-    }
-    children.push(new Paragraph({ text: '' }));
-  }
-
-  // Revenue
-  if (result.revenue && result.revenue.length > 0) {
-    children.push(new Paragraph({ text: '企业 Revenue 按年', heading: HeadingLevel.HEADING_2 }));
-    result.revenue.forEach(rev => {
-      const amount = rev.amount !== null ? rev.amount : 'N/A';
-      children.push(new Paragraph({
-        text: `${rev.year}年: ${amount} ${rev.currency || ''}`,
-        bullet: { level: 0 },
-      }));
-    });
-    children.push(new Paragraph({ text: '' }));
-  }
-
-  // Profit
-  if (result.profit) {
-    children.push(new Paragraph({ text: '盈利情况', heading: HeadingLevel.HEADING_2 }));
-    children.push(new Paragraph({
-      children: [
-        new TextRun({ text: '当前状态: ', bold: true }),
-        new TextRun(result.profit.currentStatus),
-      ],
-    }));
-    if (result.profit.unitEconomics) {
-      children.push(new Paragraph({
-        children: [
-          new TextRun({ text: '单位经济: ', bold: true }),
-          new TextRun(result.profit.unitEconomics),
-        ],
-      }));
-    }
-    children.push(new Paragraph({ text: '' }));
-  }
-
-  // Financing Cases
-  if (result.financingCases && result.financingCases.cases.length > 0) {
-    children.push(new Paragraph({ text: '相似企业融资案例', heading: HeadingLevel.HEADING_2 }));
-    result.financingCases.cases.forEach(fc => {
-      const amount = fc.amount !== null ? `${fc.amount} ${fc.currency || ''}` : 'N/A';
-      children.push(new Paragraph({
-        text: `${fc.companyName}: ${fc.round || 'N/A'} | ${amount}`,
-        bullet: { level: 0 },
-      }));
-    });
-    children.push(new Paragraph({ text: '' }));
-  }
-
-  // Policy Risk
-  if (result.policyRisk) {
-    children.push(new Paragraph({ text: '政策风险', heading: HeadingLevel.HEADING_2 }));
-    children.push(new Paragraph({
-      children: [
-        new TextRun({ text: '风险等级: ', bold: true }),
-        new TextRun(result.policyRisk.riskLevel.toUpperCase()),
-      ],
-    }));
-    if (result.policyRisk.keyRisks && result.policyRisk.keyRisks.length > 0) {
-      children.push(new Paragraph({
-        children: [new TextRun({ text: '关键风险点:', bold: true })],
-      }));
-      result.policyRisk.keyRisks.forEach((risk, index) => {
-        children.push(new Paragraph({
-          text: `${index + 1}. ${risk}`,
+          text: competitor.name,
           bullet: { level: 0 },
         }));
       });
@@ -510,73 +578,44 @@ export async function exportAsDOCX(result: AnalysisResult, filename: string): Pr
     children.push(new Paragraph({ text: '' }));
   }
 
-  // ========== 阶段 3: 团队、执行 ==========
-  children.push(new Paragraph({ text: '阶段 3: 团队、执行', heading: HeadingLevel.HEADING_1 }));
-  children.push(new Paragraph({ text: '' }));
-
-  // Stage
-  if (result.stage) {
-    children.push(new Paragraph({ text: '企业阶段判断', heading: HeadingLevel.HEADING_2 }));
+  // ========== 8. Investment Opportunity ==========
+  if (result.investmentOpportunity) {
+    children.push(new Paragraph({ text: '投资机会、投资价值', heading: HeadingLevel.HEADING_1 }));
     children.push(new Paragraph({
       children: [
-        new TextRun({ text: '阶段: ', bold: true }),
-        new TextRun(result.stage.stage || 'unknown'),
+        new TextRun({ text: '投资评级: ', bold: true }),
+        new TextRun(result.investmentOpportunity.investmentRating.toUpperCase()),
       ],
     }));
     children.push(new Paragraph({
       children: [
-        new TextRun({ text: '判断依据: ', bold: true }),
-        new TextRun(result.stage.reasoning),
-      ],
-    }));
-    children.push(new Paragraph({ text: '' }));
-  }
-
-  // ========== 阶段 4: 综合评价投资价值 ==========
-  children.push(new Paragraph({ text: '阶段 4: 综合评价投资价值', heading: HeadingLevel.HEADING_1 }));
-  children.push(new Paragraph({ text: '' }));
-
-  // Investment Value
-  if (result.investmentValue) {
-    children.push(new Paragraph({ text: '投资价值评级', heading: HeadingLevel.HEADING_2 }));
-    children.push(new Paragraph({
-      children: [
-        new TextRun({ text: '评级: ', bold: true }),
-        new TextRun(result.investmentValue.rating.toUpperCase()),
+        new TextRun({ text: '建议投资阶段: ', bold: true }),
+        new TextRun(result.investmentOpportunity.recommendedInvestmentStage),
       ],
     }));
 
-    if (result.investmentValue.keyUpsides && result.investmentValue.keyUpsides.length > 0) {
+    if (result.investmentOpportunity.keyInvestmentHighlights && result.investmentOpportunity.keyInvestmentHighlights.length > 0) {
       children.push(new Paragraph({
         children: [new TextRun({ text: '关键投资亮点:', bold: true })],
       }));
-      result.investmentValue.keyUpsides.forEach((upside, index) => {
+      result.investmentOpportunity.keyInvestmentHighlights.forEach((highlight, index) => {
         children.push(new Paragraph({
-          text: `${index + 1}. ${upside}`,
+          text: `${index + 1}. ${highlight}`,
           bullet: { level: 0 },
         }));
       });
     }
 
-    if (result.investmentValue.keyRisks && result.investmentValue.keyRisks.length > 0) {
+    if (result.investmentOpportunity.riskFactors && result.investmentOpportunity.riskFactors.length > 0) {
       children.push(new Paragraph({
-        children: [new TextRun({ text: '关键风险点:', bold: true })],
+        children: [new TextRun({ text: '风险因素:', bold: true })],
       }));
-      result.investmentValue.keyRisks.forEach((risk, index) => {
+      result.investmentOpportunity.riskFactors.forEach((risk, index) => {
         children.push(new Paragraph({
           text: `${index + 1}. ${risk}`,
           bullet: { level: 0 },
         }));
       });
-    }
-
-    if (result.investmentValue.targetInvestorProfile) {
-      children.push(new Paragraph({
-        children: [
-          new TextRun({ text: '目标投资人画像: ', bold: true }),
-          new TextRun(result.investmentValue.targetInvestorProfile),
-        ],
-      }));
     }
 
     children.push(new Paragraph({ text: '' }));

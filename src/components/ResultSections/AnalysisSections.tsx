@@ -8,8 +8,7 @@ import {
   BusinessModelAnalysis,
   IndustryEcosystemAnalysis,
   InvestmentOpportunityAnalysis,
-  PaperInfo,
-  CompanyProfile
+  PaperInfo
 } from '../../types';
 
 const { Paragraph, Text } = Typography;
