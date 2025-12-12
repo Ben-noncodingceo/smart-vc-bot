@@ -48,7 +48,10 @@ export default function StagedResultPage() {
 
   const {
     isAnalyzing,
-    stagedState,
+    companyProfile,
+    currentStage,
+    completedStages,
+    stageResults,
     analyzeStage,
     getCombinedResults,
     resetStagedAnalysis,
@@ -60,10 +63,10 @@ export default function StagedResultPage() {
 
   useEffect(() => {
     // Redirect if no company profile has been extracted
-    if (!stagedState.companyProfile) {
+    if (!companyProfile) {
       navigate('/upload');
     }
-  }, [stagedState.companyProfile, navigate]);
+  }, [companyProfile, navigate]);
 
   const handleAnalyzeNextStage = async () => {
     const nextStage = getNextStage();
@@ -77,7 +80,7 @@ export default function StagedResultPage() {
     if (!combinedResults) return;
 
     const json = exportAsJSON(combinedResults);
-    const filename = `${stagedState.companyProfile?.name || 'company'}_analysis_${Date.now()}.json`;
+    const filename = `${companyProfile?.name || 'company'}_analysis_${Date.now()}.json`;
     downloadFile(json, filename, 'application/json');
     message.success('JSON 文件已下载');
   };
@@ -87,7 +90,7 @@ export default function StagedResultPage() {
     if (!combinedResults) return;
 
     const markdown = exportAsMarkdown(combinedResults);
-    const filename = `${stagedState.companyProfile?.name || 'company'}_analysis_${Date.now()}.md`;
+    const filename = `${companyProfile?.name || 'company'}_analysis_${Date.now()}.md`;
     downloadFile(markdown, filename, 'text/markdown');
     message.success('Markdown 文件已下载');
   };
@@ -98,15 +101,14 @@ export default function StagedResultPage() {
     navigate('/');
   };
 
-  const progressPercent = (stagedState.completedStages.length / 4) * 100;
+  const progressPercent = (completedStages.length / 4) * 100;
   const nextStage = getNextStage();
   const currentStageConfig = nextStage ? stages.find(s => s.stage === nextStage) : null;
 
   // Render results for each stage
   const renderStageResults = (stage: AnalysisStage) => {
-    const stageResult = stagedState.stageResults.find((_, idx) =>
-      stagedState.completedStages[idx] === stage
-    );
+    const stageResultIndex = completedStages.indexOf(stage);
+    const stageResult = stageResultIndex >= 0 ? stageResults[stageResultIndex] : null;
 
     if (!stageResult) return null;
 
@@ -181,8 +183,8 @@ export default function StagedResultPage() {
         )}
 
         {/* Company Profile */}
-        {stagedState.companyProfile && (
-          <CompanySummary profile={stagedState.companyProfile} />
+        {companyProfile && (
+          <CompanySummary profile={companyProfile} />
         )}
 
         {/* Progress */}
@@ -190,13 +192,13 @@ export default function StagedResultPage() {
           <Progress
             percent={progressPercent}
             status={isAnalyzing ? 'active' : 'normal'}
-            format={() => `${stagedState.completedStages.length} / 4 阶段完成`}
+            format={() => `${completedStages.length} / 4 阶段完成`}
           />
           <Divider />
           <Space direction="vertical" style={{ width: '100%' }}>
             {stages.map(stageConfig => {
-              const isCompleted = stagedState.completedStages.includes(stageConfig.stage);
-              const isCurrent = stagedState.currentStage === stageConfig.stage;
+              const isCompleted = completedStages.includes(stageConfig.stage);
+              const isCurrent = currentStage === stageConfig.stage;
 
               return (
                 <div key={stageConfig.stage} style={{ display: 'flex', alignItems: 'center' }}>
@@ -214,7 +216,7 @@ export default function StagedResultPage() {
         </Card>
 
         {/* Completed Stage Results */}
-        {stagedState.completedStages.map(stage => renderStageResults(stage))}
+        {completedStages.map(stage => renderStageResults(stage))}
 
         {/* Next Stage Button */}
         {!isAllStagesCompleted() && nextStage && (
