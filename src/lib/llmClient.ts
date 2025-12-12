@@ -91,8 +91,11 @@ export async function callLLM(params: {
   apiKey: string;
   systemPrompt: string;
   userPrompt: string;
+  timeoutMs?: number; // Optional timeout in milliseconds, default 120s
+  onProgress?: (message: string) => void; // Optional progress callback
 }): Promise<string> {
   const provider = PROVIDERS[params.providerId];
+  const timeoutMs = params.timeoutMs || 120000; // Default 120 seconds
 
   if (!provider) {
     throw new Error(`Unknown provider: ${params.providerId}`);
@@ -106,34 +109,50 @@ export async function callLLM(params: {
   try {
     let response;
 
-    if (USE_PROXY) {
-      // 使用代理服务器
-      response = await fetch(PROXY_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          url: provider.baseUrl,
+    // Create AbortController for timeout
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => {
+      controller.abort();
+    }, timeoutMs);
+
+    params.onProgress?.('正在调用 AI API...');
+
+    try {
+      if (USE_PROXY) {
+        // 使用代理服务器
+        response = await fetch(PROXY_URL, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            url: provider.baseUrl,
+            headers: {
+              'Content-Type': 'application/json',
+              [provider.apiKeyHeaderName]: buildAuthHeaderValue(params.providerId, params.apiKey),
+            },
+            body: body
+          }),
+          signal: controller.signal,
+        });
+      } else {
+        // 直接调用 API
+        response = await fetch(provider.baseUrl, {
+          method: 'POST',
+          mode: 'cors',
           headers: {
             'Content-Type': 'application/json',
             [provider.apiKeyHeaderName]: buildAuthHeaderValue(params.providerId, params.apiKey),
           },
-          body: body
-        }),
-      });
-    } else {
-      // 直接调用 API
-      response = await fetch(provider.baseUrl, {
-        method: 'POST',
-        mode: 'cors',
-        headers: {
-          'Content-Type': 'application/json',
-          [provider.apiKeyHeaderName]: buildAuthHeaderValue(params.providerId, params.apiKey),
-        },
-        body: JSON.stringify(body),
-      });
+          body: JSON.stringify(body),
+          signal: controller.signal,
+        });
+      }
+    } finally {
+      clearTimeout(timeoutId);
     }
+
+    params.onProgress?.('正在解析 AI 响应...');
 
     if (!response.ok) {
       const errorText = await response.text();
@@ -147,9 +166,22 @@ export async function callLLM(params: {
       throw new Error('无法从 API 响应中提取内容。请检查 API Key 是否正确。');
     }
 
+    params.onProgress?.('AI 响应成功');
+
     return content;
   } catch (error) {
     if (error instanceof Error) {
+      // Handle timeout
+      if (error.name === 'AbortError') {
+        throw new Error(
+          `请求超时（超过 ${timeoutMs / 1000} 秒）。\n` +
+          `该分析阶段包含较多维度，可能需要更长时间。\n` +
+          `建议：\n` +
+          `1. 稍后重试\n` +
+          `2. 检查网络连接\n` +
+          `3. 联系技术支持`
+        );
+      }
       // More detailed error messages
       if (error.message.includes('Failed to fetch')) {
         throw new Error(

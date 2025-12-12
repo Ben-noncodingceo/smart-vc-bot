@@ -44,7 +44,8 @@ export function useAnalysis() {
         providerId,
         apiKey,
         systemPrompt: profilePrompts.systemPrompt,
-        userPrompt: profilePrompts.userPrompt
+        userPrompt: profilePrompts.userPrompt,
+        timeoutMs: 120000 // 2 minutes for profile extraction
       });
 
       const companyProfile: CompanyProfile = await parseJSONWithRetry({
@@ -67,11 +68,16 @@ export function useAnalysis() {
         selectedItems
       );
 
+      // Use longer timeout based on number of selected items
+      // More items = more complex analysis = longer processing time
+      const analysisTimeoutMs = selectedItems.length > 5 ? 300000 : 180000;
+
       const analysisResponse = await callLLM({
         providerId,
         apiKey,
         systemPrompt: analysisPrompts.systemPrompt,
-        userPrompt: analysisPrompts.userPrompt
+        userPrompt: analysisPrompts.userPrompt,
+        timeoutMs: analysisTimeoutMs
       });
 
       const analysisResult: AnalysisResult = await parseJSONWithRetry({
@@ -137,7 +143,8 @@ export function useAnalysis() {
       providerId,
       apiKey,
       systemPrompt: chatPrompts.systemPrompt,
-      userPrompt: chatPrompts.userPrompt
+      userPrompt: chatPrompts.userPrompt,
+      timeoutMs: 120000 // 2 minutes for chat responses
     });
 
     // Add assistant message
