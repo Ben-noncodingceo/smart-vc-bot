@@ -45,7 +45,11 @@ export function useStagedAnalysis() {
         providerId,
         apiKey,
         systemPrompt: profilePrompts.systemPrompt,
-        userPrompt: profilePrompts.userPrompt
+        userPrompt: profilePrompts.userPrompt,
+        timeoutMs: 120000, // 2 minutes for profile extraction
+        onProgress: (message) => {
+          console.log('企业概要提取进度:', message);
+        }
       });
 
       const extractedProfile: CompanyProfile = await parseJSONWithRetry({
@@ -87,11 +91,20 @@ export function useStagedAnalysis() {
         documentSummary
       );
 
+      // Stage 2 has more analysis items, so we need a longer timeout
+      // Stage 2: marketCap, revenue, profit, financingCases, policyRisk (5 items)
+      // Other stages: 1-3 items
+      const timeoutMs = stage === 2 ? 300000 : 180000; // Stage 2: 300s (5min), Others: 180s (3min)
+
       const stageResponse = await callLLM({
         providerId,
         apiKey,
         systemPrompt: stagePrompts.systemPrompt,
-        userPrompt: stagePrompts.userPrompt
+        userPrompt: stagePrompts.userPrompt,
+        timeoutMs,
+        onProgress: (message) => {
+          console.log(`阶段 ${stage} 进度:`, message);
+        }
       });
 
       const stageResult: Partial<AnalysisResult> = await parseJSONWithRetry({

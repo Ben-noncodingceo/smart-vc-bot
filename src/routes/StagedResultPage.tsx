@@ -286,6 +286,33 @@ export default function StagedResultPage() {
                 <Paragraph type="secondary">
                   {currentStageConfig?.description}
                 </Paragraph>
+                {nextStage === 2 && !isAnalyzing && (
+                  <Alert
+                    message="提示"
+                    description="阶段 2 包含较多分析维度（市值、收入、利润、融资案例、政策风险），分析时间可能较长（3-5分钟），请耐心等待。"
+                    type="info"
+                    showIcon
+                    style={{ marginTop: 12 }}
+                  />
+                )}
+                {isAnalyzing && currentStage === 2 && (
+                  <Alert
+                    message="正在分析中"
+                    description={
+                      <>
+                        <div>阶段 2 正在进行深度分析，这可能需要 3-5 分钟...</div>
+                        <div style={{ marginTop: 8 }}>
+                          <Text type="secondary">
+                            分析维度包括：市场规模、收入情况、盈利分析、融资案例、政策风险
+                          </Text>
+                        </div>
+                      </>
+                    }
+                    type="warning"
+                    showIcon
+                    style={{ marginTop: 12 }}
+                  />
+                )}
               </div>
               <Button
                 type="primary"
