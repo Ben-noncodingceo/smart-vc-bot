@@ -26,18 +26,7 @@ import { useAnalysis } from '../hooks/useAnalysis';
 import { exportAsJSON, exportAsMarkdown, downloadFile, copyToClipboard } from '../lib/export';
 
 import CompanySummary from '../components/ResultSections/CompanySummary';
-import {
-  MarketCapSection,
-  FrontierSection,
-  PublicPeersSection,
-  StageSection,
-  RevenueSection,
-  ProfitSection,
-  PolicyRiskSection,
-  InvestmentValueSection,
-  FinancingCasesSection,
-  PapersSection
-} from '../components/ResultSections/AnalysisSections';
+import AnalysisCategories from '../components/AnalysisCategories';
 
 const { Title, Paragraph, Text } = Typography;
 const { TextArea } = Input;
@@ -242,17 +231,8 @@ export default function ResultPage() {
       {/* Company Summary */}
       <CompanySummary profile={companyProfile} />
 
-      {/* Analysis Sections */}
-      {analysisResult.marketCap && <MarketCapSection data={analysisResult.marketCap} />}
-      {analysisResult.frontier && <FrontierSection data={analysisResult.frontier} />}
-      {analysisResult.publicPeers && <PublicPeersSection data={analysisResult.publicPeers} />}
-      {analysisResult.stage && <StageSection data={analysisResult.stage} />}
-      {analysisResult.revenue && <RevenueSection data={analysisResult.revenue} />}
-      {analysisResult.profit && <ProfitSection data={analysisResult.profit} />}
-      {analysisResult.policyRisk && <PolicyRiskSection data={analysisResult.policyRisk} />}
-      {analysisResult.investmentValue && <InvestmentValueSection data={analysisResult.investmentValue} />}
-      {analysisResult.financingCases && <FinancingCasesSection data={analysisResult.financingCases} />}
-      {analysisResult.papers && <PapersSection data={analysisResult.papers} />}
+      {/* Analysis Sections - Categorized by Type */}
+      <AnalysisCategories result={analysisResult} />
 
       {/* Export Buttons */}
       <Card className="section-card" title="导出分析结果">
