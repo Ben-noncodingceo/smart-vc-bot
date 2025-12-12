@@ -6,7 +6,8 @@ import {
   CompanyProfile,
   AnalysisResult,
   AnalysisStatus,
-  ChatMessage
+  ChatMessage,
+  AnalysisStage
 } from '../types';
 
 interface AppState {
@@ -32,6 +33,11 @@ interface AppState {
   // Chat
   chatMessages: ChatMessage[];
 
+  // Staged Analysis
+  currentStage: AnalysisStage | null;
+  completedStages: AnalysisStage[];
+  stageResults: Partial<AnalysisResult>[];
+
   // Actions
   setProvider: (providerId: ProviderId) => void;
   setApiKey: (apiKey: string, remember: boolean) => void;
@@ -45,6 +51,9 @@ interface AppState {
   setAnalysisError: (error: string | null) => void;
   addChatMessage: (message: ChatMessage) => void;
   clearChatMessages: () => void;
+  setCurrentStage: (stage: AnalysisStage | null) => void;
+  addCompletedStage: (stage: AnalysisStage, result: Partial<AnalysisResult>) => void;
+  resetStagedAnalysis: () => void;
   reset: () => void;
 }
 
@@ -71,7 +80,10 @@ const initialState = {
   analysisResult: null,
   analysisStatus: 'idle' as AnalysisStatus,
   analysisError: null,
-  chatMessages: []
+  chatMessages: [],
+  currentStage: null,
+  completedStages: [],
+  stageResults: []
 };
 
 export const useAppStore = create<AppState>()(
@@ -106,6 +118,22 @@ export const useAppStore = create<AppState>()(
         })),
 
       clearChatMessages: () => set({ chatMessages: [] }),
+
+      setCurrentStage: (stage) => set({ currentStage: stage }),
+
+      addCompletedStage: (stage, result) =>
+        set((state) => ({
+          completedStages: [...state.completedStages, stage],
+          stageResults: [...state.stageResults, result],
+          currentStage: null
+        })),
+
+      resetStagedAnalysis: () =>
+        set({
+          currentStage: null,
+          completedStages: [],
+          stageResults: []
+        }),
 
       reset: () =>
         set((state) => ({

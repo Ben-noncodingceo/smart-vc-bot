@@ -5,27 +5,21 @@ import { getProfileExtractionPrompt, getStagedAnalysisPrompt } from '../lib/prom
 import { truncateText } from '../lib/fileParser';
 import { CompanyProfile, AnalysisResult, AnalysisStage, ANALYSIS_STAGES } from '../types';
 
-interface StagedAnalysisState {
-  currentStage: AnalysisStage | null;
-  completedStages: AnalysisStage[];
-  stageResults: Partial<AnalysisResult>[];
-  companyProfile: CompanyProfile | null;
-}
-
 export function useStagedAnalysis() {
   const {
     providerId,
     apiKey,
     documentText,
+    companyProfile,
+    currentStage,
+    completedStages,
+    stageResults,
+    setCompanyProfile,
     setAnalysisError,
+    setCurrentStage,
+    addCompletedStage,
+    resetStagedAnalysis: resetStoreState
   } = useAppStore();
-
-  const [stagedState, setStagedState] = useState<StagedAnalysisState>({
-    currentStage: null,
-    completedStages: [],
-    stageResults: [],
-    companyProfile: null
-  });
 
   const [isAnalyzing, setIsAnalyzing] = useState(false);
 
@@ -53,19 +47,14 @@ export function useStagedAnalysis() {
         userPrompt: profilePrompts.userPrompt
       });
 
-      const companyProfile: CompanyProfile = await parseJSONWithRetry({
+      const extractedProfile: CompanyProfile = await parseJSONWithRetry({
         providerId,
         apiKey,
         rawResponse: profileResponse
       });
 
-      setStagedState({
-        currentStage: null,
-        completedStages: [],
-        stageResults: [],
-        companyProfile
-      });
-
+      setCompanyProfile(extractedProfile);
+      resetStoreState(); // Clear any previous staged analysis
       setAnalysisError(null);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : '未知错误';
@@ -79,21 +68,21 @@ export function useStagedAnalysis() {
    * Analyze a specific stage
    */
   const analyzeStage = async (stage: AnalysisStage) => {
-    if (!providerId || !apiKey || !documentText || !stagedState.companyProfile) {
+    if (!providerId || !apiKey || !documentText || !companyProfile) {
       setAnalysisError('缺少必要参数');
       return;
     }
 
     setIsAnalyzing(true);
     setAnalysisError(null);
-    setStagedState(prev => ({ ...prev, currentStage: stage }));
+    setCurrentStage(stage);
 
     try {
       const documentSummary = truncateText(documentText, 8000);
 
       const stagePrompts = getStagedAnalysisPrompt(
         stage,
-        stagedState.companyProfile,
+        companyProfile,
         documentSummary
       );
 
@@ -111,20 +100,14 @@ export function useStagedAnalysis() {
       });
 
       // Add company profile to result
-      stageResult.companyProfile = stagedState.companyProfile;
+      stageResult.companyProfile = companyProfile;
 
-      setStagedState(prev => ({
-        ...prev,
-        currentStage: null,
-        completedStages: [...prev.completedStages, stage],
-        stageResults: [...prev.stageResults, stageResult]
-      }));
-
+      addCompletedStage(stage, stageResult);
       setAnalysisError(null);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : '未知错误';
       setAnalysisError(`阶段 ${stage} 分析失败：${errorMessage}`);
-      setStagedState(prev => ({ ...prev, currentStage: null }));
+      setCurrentStage(null);
     } finally {
       setIsAnalyzing(false);
     }
@@ -134,14 +117,14 @@ export function useStagedAnalysis() {
    * Get combined results from all completed stages
    */
   const getCombinedResults = (): AnalysisResult | null => {
-    if (!stagedState.companyProfile) return null;
+    if (!companyProfile) return null;
 
     const combined: any = {
-      companyProfile: stagedState.companyProfile
+      companyProfile: companyProfile
     };
 
     // Merge all stage results
-    stagedState.stageResults.forEach(result => {
+    stageResults.forEach(result => {
       Object.assign(combined, result);
     });
 
@@ -149,23 +132,11 @@ export function useStagedAnalysis() {
   };
 
   /**
-   * Reset staged analysis
-   */
-  const resetStagedAnalysis = () => {
-    setStagedState({
-      currentStage: null,
-      completedStages: [],
-      stageResults: [],
-      companyProfile: null
-    });
-  };
-
-  /**
    * Get next stage to analyze
    */
   const getNextStage = (): AnalysisStage | null => {
     const allStages: AnalysisStage[] = [1, 2, 3, 4];
-    const nextStage = allStages.find(s => !stagedState.completedStages.includes(s));
+    const nextStage = allStages.find(s => !completedStages.includes(s));
     return nextStage || null;
   };
 
@@ -173,16 +144,19 @@ export function useStagedAnalysis() {
    * Check if all stages are completed
    */
   const isAllStagesCompleted = (): boolean => {
-    return stagedState.completedStages.length === 4;
+    return completedStages.length === 4;
   };
 
   return {
     isAnalyzing,
-    stagedState,
+    companyProfile,
+    currentStage,
+    completedStages,
+    stageResults,
     startStagedAnalysis,
     analyzeStage,
     getCombinedResults,
-    resetStagedAnalysis,
+    resetStagedAnalysis: resetStoreState,
     getNextStage,
     isAllStagesCompleted,
     ANALYSIS_STAGES
