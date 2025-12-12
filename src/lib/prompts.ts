@@ -103,8 +103,15 @@ ${selectedItems.includes('publicPeers') ? `
      * name, ticker?, exchange?, country?
      * isComparable: 是否可比
      * reason: 可比性说明
-     * last3YearsCoreMetrics: 最近3年核心数据 [{ year, revenue?, profit?, marketCap?, currency? }]
-   - notes: 若无合适可比公司，说明原因
+     * last3YearsCoreMetrics: 最近3年核心数据，必须包含以下字段：
+       - year: 年份（必填）
+       - revenue: 年度收入（百万为单位，如无数据填 null）
+       - profit: 年度利润（百万为单位，如无数据填 null）
+       - marketCap: 当年市值或当前市值（百万为单位，**重要：上市公司必须提供市值数据，请基于你的知识库提供准确的市值信息**）
+       - currency: 币种（如 "USD"、"CNY" 等）
+   - notes: 若无合适可比公司，说明原因；若市值数据缺失，请说明原因
+
+   **重要提示**：对于上市公司（有 ticker 和 exchange），必须尽力提供其市值（marketCap）数据。市值是投资分析的关键指标，不可缺失。
 ` : ''}
 
 ${selectedItems.includes('stage') ? `
