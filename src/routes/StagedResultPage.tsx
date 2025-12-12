@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Card,
@@ -9,18 +9,22 @@ import {
   Steps,
   Progress,
   Divider,
-  message
+  message,
+  Input,
+  List
 } from 'antd';
 import {
   CheckCircleOutlined,
   DownloadOutlined,
   HomeOutlined,
   LoadingOutlined,
-  RightOutlined
+  RightOutlined,
+  SendOutlined
 } from '@ant-design/icons';
 import { useAppStore } from '../lib/store';
 import { useStagedAnalysis } from '../hooks/useStagedAnalysis';
-import { exportAsJSON, exportAsMarkdown, downloadFile } from '../lib/export';
+import { useAnalysis } from '../hooks/useAnalysis';
+import { exportAsJSON, exportAsMarkdown, downloadFile, exportAsPDF, exportAsDOCX } from '../lib/export';
 
 import CompanySummary from '../components/ResultSections/CompanySummary';
 import { AnalysisStage, ANALYSIS_STAGES } from '../types';
@@ -38,13 +42,19 @@ import {
 } from '../components/ResultSections/AnalysisSections';
 
 const { Title, Paragraph, Text } = Typography;
+const { TextArea } = Input;
 
 export default function StagedResultPage() {
   const navigate = useNavigate();
   const {
     analysisError,
+    chatMessages,
     reset
   } = useAppStore();
+
+  const { sendChatMessage } = useAnalysis();
+  const [chatInput, setChatInput] = useState('');
+  const [isSendingMessage, setIsSendingMessage] = useState(false);
 
   const {
     isAnalyzing,
@@ -95,10 +105,59 @@ export default function StagedResultPage() {
     message.success('Markdown 文件已下载');
   };
 
+  const handleExportPDF = async () => {
+    const combinedResults = getCombinedResults();
+    if (!combinedResults) return;
+
+    try {
+      const filename = `${companyProfile?.name || 'company'}_analysis_${Date.now()}.pdf`;
+      await exportAsPDF(combinedResults, filename);
+      message.success('PDF 文件已下载');
+    } catch (error) {
+      message.error('PDF 导出失败');
+    }
+  };
+
+  const handleExportDOCX = async () => {
+    const combinedResults = getCombinedResults();
+    if (!combinedResults) return;
+
+    try {
+      const filename = `${companyProfile?.name || 'company'}_analysis_${Date.now()}.docx`;
+      await exportAsDOCX(combinedResults, filename);
+      message.success('Word 文件已下载');
+    } catch (error) {
+      message.error('Word 导出失败');
+    }
+  };
+
   const handleReset = () => {
     resetStagedAnalysis();
     reset();
     navigate('/');
+  };
+
+  const handleSendMessage = async () => {
+    if (!chatInput.trim()) {
+      message.warning('请输入问题');
+      return;
+    }
+
+    if (!companyProfile) {
+      message.error('请先完成分析');
+      return;
+    }
+
+    setIsSendingMessage(true);
+    try {
+      await sendChatMessage(chatInput);
+      setChatInput('');
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : '发送失败';
+      message.error(errorMessage);
+    } finally {
+      setIsSendingMessage(false);
+    }
   };
 
   const progressPercent = (completedStages.length / 4) * 100;
@@ -261,7 +320,76 @@ export default function StagedResultPage() {
               >
                 导出 Markdown
               </Button>
+              <Button
+                icon={<DownloadOutlined />}
+                onClick={handleExportPDF}
+                type="primary"
+              >
+                导出 PDF
+              </Button>
+              <Button
+                icon={<DownloadOutlined />}
+                onClick={handleExportDOCX}
+                type="primary"
+              >
+                导出 Word
+              </Button>
             </Space>
+          </Card>
+        )}
+
+        {/* AI Chat */}
+        {companyProfile && (
+          <Card title="💬 AI 对话助手" className="section-card">
+            <Paragraph type="secondary">
+              基于您上传的文档和分析结果，向 AI 提问任何问题：
+            </Paragraph>
+
+            {/* Chat Messages */}
+            {chatMessages.length > 0 && (
+              <List
+                dataSource={chatMessages}
+                renderItem={(msg) => (
+                  <List.Item style={{ borderBottom: '1px solid #f0f0f0' }}>
+                    <div style={{ width: '100%' }}>
+                      <Text strong style={{ color: msg.role === 'user' ? '#1890ff' : '#52c41a' }}>
+                        {msg.role === 'user' ? '👤 您' : '🤖 AI'}:
+                      </Text>
+                      <Paragraph style={{ marginTop: 8, marginBottom: 0, whiteSpace: 'pre-wrap' }}>
+                        {msg.content}
+                      </Paragraph>
+                    </div>
+                  </List.Item>
+                )}
+                style={{ maxHeight: 400, overflow: 'auto', marginBottom: 16 }}
+              />
+            )}
+
+            {/* Chat Input */}
+            <Space.Compact style={{ width: '100%' }}>
+              <TextArea
+                value={chatInput}
+                onChange={(e) => setChatInput(e.target.value)}
+                onPressEnter={(e) => {
+                  if (!e.shiftKey) {
+                    e.preventDefault();
+                    handleSendMessage();
+                  }
+                }}
+                placeholder="输入您的问题... (Shift+Enter 换行，Enter 发送)"
+                autoSize={{ minRows: 2, maxRows: 6 }}
+                disabled={isSendingMessage}
+              />
+              <Button
+                type="primary"
+                icon={<SendOutlined />}
+                onClick={handleSendMessage}
+                loading={isSendingMessage}
+                style={{ height: 'auto' }}
+              >
+                发送
+              </Button>
+            </Space.Compact>
           </Card>
         )}
 
